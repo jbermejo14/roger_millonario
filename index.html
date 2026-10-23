@@ -186,6 +186,21 @@
     "hint": "El eterno debate nacional entre los que la prefieren con o sin ella."
   },
   {
+    "id": 300,
+    "level": 3,
+    "category": "LOGOS DE COCHES",
+    "question": "Observa el logotipo de la imagen: ¿Qué marca de coches es esta?",
+    "imageSrc": "./img/honda.png",
+    "options": [
+      "Hyundai",
+      "Honda",
+      "Holden",
+      "Haval"
+    ],
+    "correct": 1,
+    "hint": "Marca japonesa fundada por Soichiro Honda; su logo es una 'H' recta y cromada dentro de un marco redondeado."
+  },
+  {
     "id": 301,
     "level": 3,
     "category": "HISTORIA BÍBLICA",
@@ -872,8 +887,10 @@
     const sound = new SoundEngine();
 
     // COMPONENTE DE LA ESCALA DE PREMIOS (LATERAL Y MODAL)
-    function PrizeLadderCard({ currentRound, roundTeamStep, teams, gameState, currentPrizeObj, isModal, onClose }) {
-      const activeTeam = teams[roundTeamStep] || teams[0];
+    function PrizeLadderCard({ activeTeamIndex, teams, matchNumber, matchHistory = [], gameState, currentPrizeObj, isModal, onClose }) {
+      const activeTeam = teams[activeTeamIndex] || teams[0];
+      const otherIndex = activeTeamIndex === 0 ? 1 : 0;
+      const otherTeam = teams[otherIndex];
 
       return (
         <div className="bg-slate-950/95 border border-slate-700/80 rounded-2xl p-4 shadow-2xl backdrop-blur-md w-full">
@@ -894,7 +911,7 @@
               </button>
             ) : (
               <span className="text-[10px] font-black uppercase text-amber-400 bg-amber-400/10 border border-amber-400/30 px-2 py-0.5 rounded-full">
-                Ronda {currentRound} / 15
+                Partida {matchNumber}
               </span>
             )}
           </div>
@@ -902,56 +919,74 @@
           {/* Tarjeta: Por dónde van ahora */}
           <div className="mb-3.5 p-3 rounded-xl bg-gradient-to-r from-blue-950/80 to-slate-900 border border-amber-500/40 shadow-inner">
             <div className="text-[10px] font-bold uppercase tracking-wider text-amber-400 flex items-center justify-between">
-              <span>En juego en esta ronda:</span>
-              <span className="text-slate-300">Ronda {currentRound} de 15</span>
+              <span>En juego ({activeTeam.name}):</span>
+              <span className="text-slate-300">Nivel {activeTeam.level} de 15</span>
             </div>
             <div className="text-2xl font-black text-white tracking-wide mt-0.5">
               {currentPrizeObj.label}
             </div>
-            {gameState !== "SETUP" && gameState !== "FINISHED" && (
-              <div className="text-xs text-slate-300 mt-1 flex items-center gap-1.5">
-                <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                <span>Turno actual:</span>
-                <strong className="text-amber-300">{activeTeam.name}</strong>
-                <span className="text-slate-400 text-[10px]">({roundTeamStep + 1}/2)</span>
+            {gameState !== "SETUP" && gameState !== "FINISHED" && gameState !== "MATCH_SUMMARY" && (
+              <div className="text-xs text-slate-300 mt-1 flex flex-col gap-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                  <span>Turno actual:</span>
+                  <strong className="text-amber-300">{activeTeam.name}</strong>
+                </div>
+                {!otherTeam.isAlive && (
+                  <div className="text-[10px] text-amber-400/95 font-bold bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/30">
+                    ⚠️ {otherTeam.name} eliminado ({otherTeam.money.toLocaleString("es-ES")} €) • En solitario
+                  </div>
+                )}
               </div>
             )}
           </div>
 
           {/* Posición económica de cada equipo */}
           <div className="grid grid-cols-2 gap-2 text-xs mb-3.5">
-            <div className="p-2 rounded-lg bg-blue-950/50 border border-blue-500/30">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold text-blue-300 truncate">{teams[0].name}</span>
-                <span className="text-[9px] bg-blue-600 text-white font-black px-1 rounded">E1</span>
-              </div>
-              <div className="text-sm font-black text-white mt-0.5">
-                {teams[0].money.toLocaleString("es-ES")} €
-              </div>
-              <div className="text-[9px] text-slate-400">
-                Seguro: {teams[0].safeMoney.toLocaleString("es-ES")} €
-              </div>
-            </div>
+            {teams.map((t, idx) => {
+              const isTurn = idx === activeTeamIndex && gameState !== "SETUP" && gameState !== "FINISHED" && gameState !== "MATCH_SUMMARY";
+              const isDead = !t.isAlive;
+              const borderClass = idx === 0
+                ? (isTurn ? "bg-blue-950/90 border-amber-400 ring-2 ring-amber-400/50" : isDead ? "bg-slate-950/80 border-slate-800 opacity-75" : "bg-blue-950/40 border-blue-500/30")
+                : (isTurn ? "bg-purple-950/90 border-amber-400 ring-2 ring-amber-400/50" : isDead ? "bg-slate-950/80 border-slate-800 opacity-75" : "bg-purple-950/40 border-purple-500/30");
 
-            <div className="p-2 rounded-lg bg-purple-950/50 border border-purple-500/30">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold text-purple-300 truncate">{teams[1].name}</span>
-                <span className="text-[9px] bg-purple-600 text-white font-black px-1 rounded">E2</span>
-              </div>
-              <div className="text-sm font-black text-white mt-0.5">
-                {teams[1].money.toLocaleString("es-ES")} €
-              </div>
-              <div className="text-[9px] text-slate-400">
-                Seguro: {teams[1].safeMoney.toLocaleString("es-ES")} €
-              </div>
-            </div>
+              return (
+                <div key={t.id} className={`p-2 rounded-lg border transition-all ${borderClass}`}>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-[10px] font-bold truncate ${idx === 0 ? "text-blue-300" : "text-purple-300"}`}>{t.name}</span>
+                    <span className={`text-[9px] text-white font-black px-1 rounded ${idx === 0 ? "bg-blue-600" : "bg-purple-600"}`}>
+                      {idx === 0 ? "E1" : "E2"}
+                    </span>
+                  </div>
+                  <div className="text-sm font-black text-white mt-0.5">
+                    {t.money.toLocaleString("es-ES")} €
+                  </div>
+                  <div className="text-[9px] text-slate-400">
+                    {isDead ? (
+                      <span className="text-red-400 font-bold">❌ Eliminado</span>
+                    ) : (
+                      <span>Nivel {t.level} • Seg: {t.safeMoney.toLocaleString("es-ES")} €</span>
+                    )}
+                  </div>
+                  {matchHistory && matchHistory.length > 0 && (
+                    <div className="text-[8px] text-amber-300/80 border-t border-slate-800/80 mt-1 pt-0.5">
+                      {(() => {
+                        const prev = matchHistory.reduce((acc, m) => acc + (idx === 0 ? m.team0 : m.team1), 0);
+                        return `Previo: ${prev.toLocaleString("es-ES")} € | Tot: ${(prev + t.money).toLocaleString("es-ES")} €`;
+                      })()}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           {/* Lista de los 15 Escalones (de 15 a 1) */}
           <div className="space-y-1">
             {[...PRIZE_LADDER].reverse().map((p) => {
-              const isCurrent = p.level === currentRound;
-              const isPassed = p.level < currentRound;
+              const isCurrent = p.level === activeTeam.level;
+              const isE1Aiming = teams[0].isAlive && teams[0].level === p.level;
+              const isE2Aiming = teams[1].isAlive && teams[1].level === p.level;
               const isE1Here = teams[0].money === p.prize && teams[0].money > 0;
               const isE2Here = teams[1].money === p.prize && teams[1].money > 0;
 
@@ -967,10 +1002,6 @@
                 rowClasses = "text-white font-black bg-blue-950/40 border border-slate-700/60";
                 numClass = "text-white font-black";
                 labelClass = "text-white font-black";
-              } else if (isPassed) {
-                rowClasses = "text-slate-400/60 font-medium bg-slate-950/30";
-                numClass = "text-slate-500";
-                labelClass = "text-slate-400/80";
               }
 
               return (
@@ -999,17 +1030,27 @@
                   <div className="flex items-center gap-1">
                     {isCurrent && (
                       <span className="text-[8px] uppercase font-black bg-slate-950 text-amber-300 px-1.5 py-0.5 rounded shadow tracking-wider">
-                        Jugando
+                        En Juego
+                      </span>
+                    )}
+                    {isE1Aiming && !isCurrent && (
+                      <span className="text-[8px] font-bold bg-blue-700 text-white px-1 py-0.2 rounded" title={`${teams[0].name} va por este nivel`}>
+                        E1
+                      </span>
+                    )}
+                    {isE2Aiming && !isCurrent && (
+                      <span className="text-[8px] font-bold bg-purple-700 text-white px-1 py-0.2 rounded" title={`${teams[1].name} va por este nivel`}>
+                        E2
                       </span>
                     )}
                     {isE1Here && (
                       <span className="text-[9px] font-black bg-blue-600 text-white px-1.5 py-0.5 rounded shadow ring-1 ring-blue-300" title={`${teams[0].name} tiene este premio`}>
-                        E1
+                        E1 €
                       </span>
                     )}
                     {isE2Here && (
                       <span className="text-[9px] font-black bg-purple-600 text-white px-1.5 py-0.5 rounded shadow ring-1 ring-purple-300" title={`${teams[1].name} tiene este premio`}>
-                        E2
+                        E2 €
                       </span>
                     )}
                   </div>
@@ -1027,7 +1068,7 @@
               <span className="w-2 h-2 rounded-full bg-white"></span> Seguro
             </span>
             <span className="flex items-center gap-1">
-              <span className="px-1 bg-blue-600 text-white rounded text-[8px] font-bold">E1</span> / <span className="px-1 bg-purple-600 text-white rounded text-[8px] font-bold">E2</span> Premios de equipo
+              <span className="px-1 bg-blue-600 text-white rounded text-[8px] font-bold">E1</span> / <span className="px-1 bg-purple-600 text-white rounded text-[8px] font-bold">E2</span> Equipos
             </span>
           </div>
         </div>
@@ -1038,17 +1079,16 @@
     function App() {
       const [muted, setMuted] = useState(false);
       const [teams, setTeams] = useState([
-        { id: 0, name: "Equipo 1", money: 0, safeMoney: 0, lifelines: { call: true, fifty: true, public: true, host: true } },
-        { id: 1, name: "Equipo 2", money: 0, safeMoney: 0, lifelines: { call: true, fifty: true, public: true, host: true } }
+        { id: 0, name: "Equipo 1", level: 1, money: 0, safeMoney: 0, isAlive: true, status: "PLAYING", lifelines: { call: true, fifty: true, public: true, host: true } },
+        { id: 1, name: "Equipo 2", level: 1, money: 0, safeMoney: 0, isAlive: true, status: "PLAYING", lifelines: { call: true, fifty: true, public: true, host: true } }
       ]);
-      const [gameState, setGameState] = useState("SETUP"); // SETUP | THEME_REVEAL | QUESTION | ANSWERED | FINISHED
+      const [gameState, setGameState] = useState("SETUP"); // SETUP | THEME_REVEAL | QUESTION | ANSWERED | MATCH_SUMMARY | FINISHED
       
-      // NUEVA ESTRUCTURA DE RONDAS:
-      // Cada ronda tiene 2 turnos (Turno 0 = Equipo 1, Turno 1 = Equipo 2).
-      const [currentRound, setCurrentRound] = useState(1); // 1 a 15
-      const [roundTeamStep, setRoundTeamStep] = useState(0); // 0 (Equipo 1) o 1 (Equipo 2)
+      // TORNEO DE 2 O 3 PARTIDAS:
+      const [matchNumber, setMatchNumber] = useState(1);
+      const [matchHistory, setMatchHistory] = useState([]); // [{ match: 1, team0: X, team1: Y, team0Level: A, team1Level: B }, ...]
+      const [activeTeamIndex, setActiveTeamIndex] = useState(0); // 0 (Equipo 1) o 1 (Equipo 2)
       
-      const activeTeamIndex = roundTeamStep; // 0 o 1
       const [currentQuestion, setCurrentQuestion] = useState(null);
       const [usedQuestionIds, setUsedQuestionIds] = useState([]);
       const [selectedOption, setSelectedOption] = useState(null);
@@ -1077,7 +1117,7 @@
         }
       }, []);
 
-      const publicUrl = "https://diverse-typical-toddler-difference.trycloudflare.com";
+      const publicUrl = "https://www-understood-broadway-flavor.trycloudflare.com";
       const shareUrl = (typeof window !== "undefined" && window.location.origin && !window.location.origin.includes("localhost"))
         ? window.location.origin
         : publicUrl;
@@ -1146,19 +1186,27 @@
         setAudioSecondsLeft(5);
       }, [currentQuestion]);
 
-      // Seleccionar pregunta asegurando que no se repita en la misma partida
-      // y garantizando que en Ronda 2 (Turno de Equipo 1) salga la de música
-      const pickQuestionForRoundAndTeam = (level, teamStep) => {
+      // Seleccionar pregunta según el nivel actual del equipo activo
+      const pickQuestionForTeam = (teamIndex, customLevel = null) => {
+        const team = teams[teamIndex];
+        const level = customLevel !== null ? customLevel : (team?.level || 1);
         const candidates = QUESTIONS_DB.filter(q => q.level === level);
         let chosen = null;
 
-        if (level === 2 && teamStep === 0) {
-          // Ronda 2, turno de Equipo 1: La pregunta musical de Titanium
-          chosen = candidates.find(q => q.audioSrc) || candidates[0];
+        // La pregunta musical de Titanium para nivel 2
+        if (level === 2 && teamIndex === 0 && !usedQuestionIds.includes(155)) {
+          chosen = candidates.find(q => q.id === 155) || candidates.find(q => q.audioSrc) || candidates[0];
+        } else if (level === 3 && !usedQuestionIds.includes(300)) {
+          // La pregunta visual del logo de coches para nivel 3
+          chosen = candidates.find(q => q.id === 300) || candidates[0];
         } else {
-          // Filtrar preguntas no usadas aún
-          const available = candidates.filter(q => !usedQuestionIds.includes(q.id) && !q.audioSrc);
-          chosen = available[Math.floor(Math.random() * available.length)] || candidates[0];
+          const available = candidates.filter(q => !usedQuestionIds.includes(q.id) && !q.audioSrc && !q.imageSrc);
+          if (available.length > 0) {
+            chosen = available[Math.floor(Math.random() * available.length)];
+          } else {
+            const nonSpecial = candidates.filter(q => !q.audioSrc);
+            chosen = (nonSpecial.length > 0 ? nonSpecial : candidates)[Math.floor(Math.random() * (nonSpecial.length > 0 ? nonSpecial.length : candidates.length))];
+          }
         }
 
         setUsedQuestionIds(prev => [...prev, chosen.id]);
@@ -1172,12 +1220,67 @@
 
       const handleStartGame = () => {
         unlockAudio();
-        setCurrentRound(1);
-        setRoundTeamStep(0);
+        setMatchNumber(1);
+        setMatchHistory([]);
+        const initialTeams = [
+          { ...teams[0], level: 1, money: 0, safeMoney: 0, isAlive: true, status: "PLAYING", lifelines: { call: true, fifty: true, public: true, host: true } },
+          { ...teams[1], level: 1, money: 0, safeMoney: 0, isAlive: true, status: "PLAYING", lifelines: { call: true, fifty: true, public: true, host: true } }
+        ];
+        setTeams(initialTeams);
+        setActiveTeamIndex(0);
         setUsedQuestionIds([]);
-        pickQuestionForRoundAndTeam(1, 0);
+        pickQuestionForTeam(0, 1);
         setGameState("THEME_REVEAL");
         sound.playThemeReveal();
+      };
+
+      const handleStartNextMatch = () => {
+        unlockAudio();
+        const nextNum = matchNumber + 1;
+        setMatchNumber(nextNum);
+        const resetTeams = [
+          { ...teams[0], level: 1, money: 0, safeMoney: 0, isAlive: true, status: "PLAYING", lifelines: { call: true, fifty: true, public: true, host: true } },
+          { ...teams[1], level: 1, money: 0, safeMoney: 0, isAlive: true, status: "PLAYING", lifelines: { call: true, fifty: true, public: true, host: true } }
+        ];
+        setTeams(resetTeams);
+        setActiveTeamIndex(0);
+        pickQuestionForTeam(0, 1);
+        setGameState("THEME_REVEAL");
+        sound.playThemeReveal();
+      };
+
+      const handleFinishTournament = () => {
+        unlockAudio();
+        setGameState("FINISHED");
+        sound.playCorrect();
+      };
+
+      const handleEarlyEndMatch = () => {
+        const ok = window.confirm("¿Deseas terminar la partida actual y proclamar al ganador con los resultados acumulados?");
+        if (!ok) return;
+        sound.stopSuspenseDrone();
+        setIsTimerRunning(false);
+        setIsAnswerConfirmed(false);
+        const currentMatchResult = {
+          match: matchNumber,
+          team0: teams[0].money,
+          team1: teams[1].money,
+          team0Level: teams[0].level,
+          team1Level: teams[1].level
+        };
+        setMatchHistory(prev => [...prev, currentMatchResult]);
+        setGameState("FINISHED");
+        sound.playCorrect();
+      };
+
+      const handleResetTournament = () => {
+        setMatchNumber(1);
+        setMatchHistory([]);
+        setTeams([
+          { id: 0, name: teams[0].name || "Equipo 1", level: 1, money: 0, safeMoney: 0, isAlive: true, status: "PLAYING", lifelines: { call: true, fifty: true, public: true, host: true } },
+          { id: 1, name: teams[1].name || "Equipo 2", level: 1, money: 0, safeMoney: 0, isAlive: true, status: "PLAYING", lifelines: { call: true, fifty: true, public: true, host: true } }
+        ]);
+        setGameState("SETUP");
       };
 
       const handleStartQuestionAfterTheme = () => {
@@ -1214,8 +1317,12 @@
         setIsAnswerConfirmed(true);
         setGameState("ANSWERED");
 
-        const currentTeam = teams[activeTeamIndex];
-        setTeams(prev => prev.map((t, idx) => idx === activeTeamIndex ? { ...t, money: t.safeMoney } : t));
+        setTeams(prev => prev.map((t, idx) => idx === activeTeamIndex ? {
+          ...t,
+          money: t.safeMoney,
+          isAlive: false,
+          status: "ELIMINATED"
+        } : t));
       };
 
       const handleSelectOption = (idx) => {
@@ -1224,14 +1331,42 @@
         sound.playSelect();
       };
 
+      const handleWalkAway = () => {
+        if (gameState !== "QUESTION" || isAnswerConfirmed || !isTimerRunning) return;
+        const currentTeam = teams[activeTeamIndex];
+        if (currentTeam.money <= 0) return;
+
+        const ok = window.confirm(`¿${currentTeam.name}, queréis plantaros definitivamente con ${currentTeam.money.toLocaleString("es-ES")} €?`);
+        if (!ok) return;
+
+        sound.stopSuspenseDrone();
+        sound.playCorrect();
+        setIsTimerRunning(false);
+        setIsAnswerConfirmed(true);
+
+        setTeams(prev => prev.map((team, idx) => {
+          if (idx === activeTeamIndex) {
+            return {
+              ...team,
+              isAlive: false,
+              status: "WALKED_AWAY"
+            };
+          }
+          return team;
+        }));
+
+        setGameState("ANSWERED");
+      };
+
       const handleConfirmAnswer = () => {
         if (selectedOption === null || gameState !== "QUESTION") return;
         setIsAnswerConfirmed(true);
         setIsTimerRunning(false);
 
         const isCorrect = selectedOption === currentQuestion.correct;
-        const prizeInfo = PRIZE_LADDER.find(p => p.level === currentRound);
-        const roundPrize = prizeInfo ? prizeInfo.prize : 100;
+        const activeTeam = teams[activeTeamIndex];
+        const prizeInfo = PRIZE_LADDER.find(p => p.level === activeTeam.level);
+        const questionPrize = prizeInfo ? prizeInfo.prize : 100;
         const isSafe = prizeInfo ? prizeInfo.isSafe : false;
 
         setTimeout(() => {
@@ -1239,10 +1374,14 @@
             sound.playCorrect();
             setTeams(prev => prev.map((team, idx) => {
               if (idx === activeTeamIndex) {
+                const isFinal = team.level >= 15;
                 return {
                   ...team,
-                  money: roundPrize,
-                  safeMoney: isSafe ? roundPrize : team.safeMoney,
+                  money: questionPrize,
+                  safeMoney: isSafe ? questionPrize : team.safeMoney,
+                  level: isFinal ? 15 : team.level + 1,
+                  isAlive: !isFinal,
+                  status: isFinal ? "WON_MILLION" : "PLAYING",
                 };
               }
               return team;
@@ -1254,6 +1393,8 @@
                 return {
                   ...team,
                   money: team.safeMoney,
+                  isAlive: false,
+                  status: "ELIMINATED",
                 };
               }
               return team;
@@ -1263,28 +1404,41 @@
         }, 1100);
       };
 
-      // AVANCE: Ronda 1 responde Equipo 1 -> Ronda 1 responde Equipo 2 -> Avanza a Ronda 2
+      // AVANCE DE TURNOS: Alternos si ambos vivos; en solitario si uno pierde; fin si ambos pierden
       const handleNextTurnOrRound = () => {
-        if (roundTeamStep === 0) {
-          // Mismo número de ronda, turno de Equipo 2
-          setRoundTeamStep(1);
-          pickQuestionForRoundAndTeam(currentRound, 1);
+        const currentTeam = teams[activeTeamIndex];
+        const otherIndex = activeTeamIndex === 0 ? 1 : 0;
+        const otherTeam = teams[otherIndex];
+
+        // ¿Quién juega a continuación?
+        let nextIndex = null;
+        if (otherTeam.isAlive && currentTeam.isAlive) {
+          nextIndex = otherIndex; // Alternancia normal
+        } else if (otherTeam.isAlive && !currentTeam.isAlive) {
+          nextIndex = otherIndex; // El actual perdió/terminó, el otro sigue vivo
+        } else if (!otherTeam.isAlive && currentTeam.isAlive) {
+          nextIndex = activeTeamIndex; // El otro está eliminado, el actual sigue jugando solo
+        } else {
+          nextIndex = null; // Ambos han terminado esta partida
+        }
+
+        if (nextIndex !== null) {
+          setActiveTeamIndex(nextIndex);
+          pickQuestionForTeam(nextIndex);
           setGameState("THEME_REVEAL");
           sound.playThemeReveal();
         } else {
-          // Ambos equipos ya respondieron en esta ronda
-          if (currentRound >= 15) {
-            setGameState("FINISHED");
-            sound.playCorrect();
-            return;
-          }
-          // Avanzar a la siguiente ronda con el Equipo 1
-          const nextRound = currentRound + 1;
-          setCurrentRound(nextRound);
-          setRoundTeamStep(0);
-          pickQuestionForRoundAndTeam(nextRound, 0);
-          setGameState("THEME_REVEAL");
-          sound.playThemeReveal();
+          // Ambos equipos han terminado esta partida
+          const currentMatchResult = {
+            match: matchNumber,
+            team0: teams[0].money,
+            team1: teams[1].money,
+            team0Level: teams[0].level,
+            team1Level: teams[1].level
+          };
+          setMatchHistory(prev => [...prev, currentMatchResult]);
+          setGameState("MATCH_SUMMARY");
+          sound.playCorrect();
         }
       };
 
@@ -1373,9 +1527,10 @@
         }
       };
 
-      const activeTeam = teams[activeTeamIndex];
+      const activeTeam = teams[activeTeamIndex] || teams[0];
+      const otherTeam = teams[activeTeamIndex === 0 ? 1 : 0];
       const rebuyCost = Math.floor(activeTeam.money * 0.5);
-      const currentPrizeObj = PRIZE_LADDER.find(p => p.level === currentRound) || PRIZE_LADDER[0];
+      const currentPrizeObj = PRIZE_LADDER.find(p => p.level === (currentQuestion ? currentQuestion.level : activeTeam.level)) || PRIZE_LADDER[0];
 
       return (
         <div className="min-h-full flex flex-col justify-between">
@@ -1388,13 +1543,18 @@
                   <span className="text-amber-400 font-black text-xs">QM</span>
                 </div>
                 <div>
-                  <h1 className="text-xs sm:text-sm font-black tracking-widest uppercase text-slate-100">
+                  <h1 className="text-xs sm:text-sm font-black tracking-widest uppercase text-slate-100 flex items-center gap-2">
                     ¿Quién Quiere Ser Millonario?
+                    <span className="text-[10px] bg-amber-400/20 text-amber-300 border border-amber-400/40 px-2 py-0.5 rounded-full font-bold">
+                      Partida {matchNumber}/2
+                    </span>
                   </h1>
                   <div className="text-xs text-slate-300 font-semibold">
-                    Ronda {currentRound} de 15 • <span className="text-amber-400 font-bold">{currentPrizeObj.label}</span>
+                    Nivel {activeTeam.level} de 15 • <span className="text-amber-400 font-bold">{currentPrizeObj.label}</span>
                     <span className="ml-2 text-[10px] text-slate-400 uppercase tracking-wider">
-                      (Turno {roundTeamStep + 1}/2 de la ronda)
+                      {otherTeam.isAlive
+                        ? `(Turno: ${activeTeam.name})`
+                        : `(En solitario: ${activeTeam.name})`}
                     </span>
                   </div>
                 </div>
@@ -1403,60 +1563,43 @@
               {/* Marcador de los 2 Equipos */}
               <div className="flex items-center gap-2 sm:gap-3">
                 {teams.map((t, idx) => {
-                  const isCurrent = idx === activeTeamIndex && gameState !== "SETUP" && gameState !== "FINISHED";
+                  const isCurrent = idx === activeTeamIndex && gameState !== "SETUP" && gameState !== "FINISHED" && gameState !== "MATCH_SUMMARY";
+                  const isDead = !t.isAlive;
                   return (
                     <div
                       key={t.id}
                       className={`px-3 py-1.5 rounded-lg border transition-all text-left ${
                         isCurrent
                           ? "bg-blue-950/90 border-amber-400 ring-2 ring-amber-400/40 shadow-lg shadow-blue-500/20"
-                          : "bg-slate-900/60 border-slate-800 text-slate-400"
+                          : isDead
+                            ? "bg-slate-950/80 border-red-900/40 text-slate-400 opacity-75"
+                            : "bg-slate-900/60 border-slate-800 text-slate-400"
                       }`}
                     >
-                      <div className="text-[11px] font-bold text-slate-300 truncate max-w-[85px] sm:max-w-none">
-                        {t.name}
+                      <div className="text-[11px] font-bold text-slate-300 flex items-center justify-between gap-1">
+                        <span className="truncate max-w-[85px] sm:max-w-none">{t.name}</span>
+                        {isDead ? (
+                          <span className="text-[9px] text-red-400 font-bold uppercase">Eliminado</span>
+                        ) : isCurrent ? (
+                          <span className="text-[9px] text-emerald-400 font-bold uppercase">Turno</span>
+                        ) : null}
                       </div>
-                      <div className={`text-xs sm:text-sm font-black ${isCurrent ? "text-amber-300" : "text-slate-300"}`}>
+                      <div className={`text-xs sm:text-sm font-black ${isCurrent ? "text-amber-300" : isDead ? "text-slate-400" : "text-slate-300"}`}>
                         {t.money.toLocaleString("es-ES")} €
                       </div>
                       <div className="text-[9px] text-slate-400">
-                        Seguro: {t.safeMoney.toLocaleString("es-ES")} €
+                        {matchHistory.length > 0 ? (
+                          <span>Tot: {(matchHistory.reduce((sum, m) => sum + (idx === 0 ? m.team0 : m.team1), 0) + t.money).toLocaleString("es-ES")} €</span>
+                        ) : (
+                          <span>Seguro: {t.safeMoney.toLocaleString("es-ES")} €</span>
+                        )}
                       </div>
                     </div>
                   );
                 })}
               </div>
 
-              {/* Botones de Utilidad */}
-              <div className="flex items-center gap-1.5 text-xs">
-                <button
-                  onClick={() => setActiveModal("LADDER")}
-                  className="px-2.5 py-1.5 rounded bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/40 text-amber-300 font-bold"
-                  title="Ver Escala de Premios"
-                >
-                  Premios
-                </button>
-                <button
-                  onClick={toggleSound}
-                  className="px-2.5 py-1.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-bold"
-                >
-                  {muted ? "Sonido: Off" : "Sonido: On"}
-                </button>
-                <button
-                  onClick={() => setActiveModal("QR")}
-                  className="px-2.5 py-1.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-amber-300 font-bold hidden sm:inline-block"
-                >
-                  Móvil
-                </button>
-                <button
-                  onClick={() => setShowHostPanel(!showHostPanel)}
-                  className={`px-2.5 py-1.5 rounded border font-bold transition ${
-                    showHostPanel ? "bg-amber-400 text-slate-950 border-amber-400" : "bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-200"
-                  }`}
-                >
-                  Presentador
-                </button>
-              </div>
+
             </div>
           </header>
 
@@ -1506,7 +1649,7 @@
             {/* ÁREA CENTRAL DEL JUEGO */}
             <main className="flex-1 w-full min-w-0 flex flex-col justify-center">
               {/* Barra informativa de premio en móviles */}
-              {gameState !== "SETUP" && gameState !== "FINISHED" && (
+              {gameState !== "SETUP" && gameState !== "FINISHED" && gameState !== "MATCH_SUMMARY" && (
                 <div className="lg:hidden mb-4">
                   <button
                     onClick={() => setActiveModal("LADDER")}
@@ -1514,11 +1657,11 @@
                   >
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
-                      <span className="text-slate-400">Ronda {currentRound}/15:</span>
+                      <span className="text-slate-400">Partida {matchNumber} • Nivel {activeTeam.level}/15:</span>
                       <span className="font-black text-amber-300 text-sm">{currentPrizeObj.label}</span>
                     </div>
                     <span className="text-[11px] text-amber-400 font-bold flex items-center gap-1">
-                      Ver escala lateral ❯
+                      {activeTeam.name} ❯
                     </span>
                   </button>
                 </div>
@@ -1533,7 +1676,7 @@
                   ¿Quién Quiere Ser Millonario?
                 </h2>
                 <p className="text-slate-400 text-xs sm:text-sm mt-1 mb-6">
-                  Edición 2 Equipos • 15 Rondas (En cada ronda responden ambos equipos)
+                  Edición 2 Equipos • Concurso Multipartida
                 </p>
 
                 <div className="space-y-3 text-left mb-6">
@@ -1561,18 +1704,13 @@
                   </div>
                 </div>
 
-                <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 text-xs text-slate-300 mb-6 space-y-1.5 text-left">
-                  <div>• <strong>Dinámica de rondas:</strong> Cada ronda incluye una pregunta para el Equipo 1 y otra para el Equipo 2.</div>
-                  <div>• <strong>Temática previa:</strong> Se muestra antes de cada pregunta para que el equipo elija a su representante.</div>
-                  <div>• <strong>Tiempo:</strong> 30 segundos por pregunta.</div>
-                  <div>• <strong>Comodines:</strong> 4 disponibles por equipo con opción de recompra al 50%.</div>
-                </div>
+
 
                 <button
                   onClick={handleStartGame}
-                  className="w-full py-3.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm uppercase tracking-wider transition shadow-lg shadow-amber-500/20"
+                  className="w-full py-3.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm uppercase tracking-wider transition shadow-lg shadow-amber-500/20 cursor-pointer"
                 >
-                  Comenzar Concurso
+                  Comenzar Concurso (Partida 1)
                 </button>
               </div>
             )}
@@ -1580,12 +1718,20 @@
             {/* 2. ANUNCIO DE LA TEMÁTICA PREVIO A LA PREGUNTA */}
             {gameState === "THEME_REVEAL" && currentQuestion && (
               <div className="bg-slate-950/90 border-2 border-slate-700 rounded-2xl p-6 sm:p-10 max-w-xl mx-auto w-full text-center shadow-2xl relative overflow-hidden">
-                <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">
-                  Ronda {currentRound} de 15 • {currentPrizeObj.label}
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <span className="text-[10px] uppercase font-black px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40">
+                    Partida {matchNumber}
+                  </span>
+                  <span className="text-[10px] uppercase font-black px-2.5 py-0.5 rounded-full bg-blue-900/40 text-blue-200 border border-blue-500/40">
+                    Nivel {activeTeam.level} de 15 • {currentPrizeObj.label}
+                  </span>
                 </div>
-                <div className="text-xs font-semibold text-amber-400/90 uppercase tracking-wider mb-4">
-                  Turno {roundTeamStep + 1} de 2 en esta ronda
-                </div>
+
+                {!otherTeam.isAlive && (
+                  <div className="mb-3 px-3 py-1.5 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-bold inline-block">
+                    ⚠️ {otherTeam.name} está eliminado. {activeTeam.name} continúa jugando en solitario.
+                  </div>
+                )}
 
                 <div className="text-xs uppercase tracking-wider text-slate-400">
                   Es el turno de responder de:
@@ -1610,7 +1756,7 @@
 
                 <button
                   onClick={handleStartQuestionAfterTheme}
-                  className="w-full py-3.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm uppercase tracking-wider transition shadow-lg shadow-amber-500/20"
+                  className="w-full py-3.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm uppercase tracking-wider transition shadow-lg shadow-amber-500/20 cursor-pointer"
                 >
                   Representante Listo • Descubrir Pregunta
                 </button>
@@ -1632,8 +1778,13 @@
                       {timeLeft}
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-slate-200">
-                        {activeTeam.name}
+                      <div className="text-xs font-bold text-slate-200 flex items-center gap-2">
+                        <span>{activeTeam.name}</span>
+                        {!otherTeam.isAlive && (
+                          <span className="text-[10px] font-bold text-amber-400 bg-amber-400/10 px-1.5 py-0.2 rounded border border-amber-400/30">
+                            En solitario
+                          </span>
+                        )}
                       </div>
                       <div className="text-[11px] text-slate-400">
                         {isTimerRunning ? "30 segundos activos" : "Reloj detenido"}
@@ -1673,7 +1824,7 @@
                       }`}
                       title={activeTeam.lifelines.call ? "Comodín de la llamada" : `Gastado. Recomprar al 50% (${rebuyCost} €)`}
                     >
-                      <span className="text-[11px]">Llamada</span>
+                      <span className="text-base">☎</span>
                       {!activeTeam.lifelines.call && (
                         <span className="absolute -bottom-1 text-[8px] bg-amber-500 text-slate-950 font-black px-1 rounded-full">
                           50%
@@ -1727,11 +1878,24 @@
                   <div className="relative mx-auto w-full sm:w-[92%] lozenge-border">
                     <div className="lozenge-shape bg-gradient-to-b from-blue-950 to-slate-950 py-5 px-8 text-center">
                       <div className="text-[11px] font-bold uppercase tracking-widest text-amber-400 mb-1">
-                        {currentQuestion.category}
+                        {currentQuestion.category} • Nivel {currentQuestion.level} ({currentPrizeObj.label})
                       </div>
                       <h3 className="text-lg sm:text-2xl font-bold text-white leading-relaxed">
                         {currentQuestion.question}
                       </h3>
+
+                      {/* IMAGEN DEL LOGO O PREGUNTA VISUAL */}
+                      {currentQuestion.imageSrc && (
+                        <div className="mt-3.5 flex justify-center">
+                          <div className="p-3 bg-white rounded-xl shadow-xl border-2 border-amber-400 inline-block max-w-[200px] sm:max-w-[240px]">
+                            <img
+                              src={currentQuestion.imageSrc}
+                              alt="Logo"
+                              className="w-full h-auto max-h-32 sm:max-h-36 object-contain mx-auto"
+                            />
+                          </div>
+                        </div>
+                      )}
 
                       {/* BOTÓN DE AUDIO DE 5 SEGUNDOS (PREGUNTA MUSICAL) */}
                       {currentQuestion.audioSrc && (
@@ -1817,46 +1981,110 @@
                   })}
                 </div>
 
-                {/* BOTÓN CONFIRMAR O SIGUIENTE */}
+                {/* BOTÓN CONFIRMAR O PLANTARSE */}
                 <div className="pt-2">
                   {gameState === "QUESTION" && (
-                    <button
-                      disabled={selectedOption === null || isAnswerConfirmed}
-                      onClick={handleConfirmAnswer}
-                      className={`w-full py-3.5 rounded-lg font-black text-sm uppercase tracking-wider transition ${
-                        selectedOption !== null && !isAnswerConfirmed
-                          ? "bg-amber-400 hover:bg-amber-300 text-slate-950 cursor-pointer shadow-lg shadow-amber-500/20"
-                          : "bg-slate-900 text-slate-600 border border-slate-800 cursor-not-allowed"
-                      }`}
-                    >
-                      {selectedOption !== null ? "Confirmar Respuesta Definitiva" : "Elige una opción para responder"}
-                    </button>
+                    <div className="flex flex-col sm:flex-row items-center gap-3">
+                      <button
+                        disabled={selectedOption === null || isAnswerConfirmed}
+                        onClick={handleConfirmAnswer}
+                        className={`flex-1 w-full py-3.5 rounded-lg font-black text-sm uppercase tracking-wider transition ${
+                          selectedOption !== null && !isAnswerConfirmed
+                            ? "bg-amber-400 hover:bg-amber-300 text-slate-950 cursor-pointer shadow-lg shadow-amber-500/20"
+                            : "bg-slate-900 text-slate-600 border border-slate-800 cursor-not-allowed"
+                        }`}
+                      >
+                        {selectedOption !== null ? "Confirmar Respuesta Definitiva" : "Elige una opción para responder"}
+                      </button>
+
+                      {activeTeam.money > 0 && !isAnswerConfirmed && (
+                        <button
+                          type="button"
+                          onClick={handleWalkAway}
+                          className="w-full sm:w-auto px-5 py-3.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/30 border border-amber-500/50 text-amber-300 font-black text-xs uppercase tracking-wider transition cursor-pointer"
+                          title="Plantarse con el dinero acumulado sin arriesgar a perderlo"
+                        >
+                          🏳️ Plantarse con {activeTeam.money.toLocaleString("es-ES")} €
+                        </button>
+                      )}
+
+                      {!isAnswerConfirmed && (
+                        <button
+                          type="button"
+                          onClick={handleEarlyEndMatch}
+                          className="w-full sm:w-auto px-4 py-3.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-slate-400 hover:text-amber-300 font-bold text-xs uppercase tracking-wider transition cursor-pointer"
+                          title="Terminar la partida y ver la clasificación y ganador"
+                        >
+                          🏁 Terminar Partida
+                        </button>
+                      )}
+                    </div>
                   )}
 
                   {gameState === "ANSWERED" && (
-                    <div className="bg-slate-950 border border-slate-700 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xl">
-                      <div className="text-sm">
-                        <span className="text-slate-400 text-xs uppercase font-bold block">
-                          Resultado para {activeTeam.name}:
-                        </span>
-                        {selectedOption === currentQuestion.correct ? (
-                          <span className="text-emerald-400 font-black text-base">
-                            ¡Respuesta Correcta! ({currentPrizeObj.label})
+                    <div className="bg-slate-950 border border-slate-700 rounded-xl p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
+                      <div className="text-sm text-left w-full md:w-auto">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-slate-400 text-xs uppercase font-bold">
+                            Resultado para {activeTeam.name}:
                           </span>
+                          <span className="text-[10px] text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/30 font-bold">
+                            Partida {matchNumber}
+                          </span>
+                        </div>
+
+                        {activeTeam.status === "WALKED_AWAY" ? (
+                          <span className="text-amber-300 font-black text-base block">
+                            🏳️ ¡{activeTeam.name} se ha plantado con {activeTeam.money.toLocaleString("es-ES")} €!
+                          </span>
+                        ) : selectedOption === currentQuestion.correct ? (
+                          <div>
+                            <span className="text-emerald-400 font-black text-base block">
+                              ¡Respuesta Correcta! Premio: {currentPrizeObj.label}
+                            </span>
+                            {currentPrizeObj.isSafe && (
+                              <span className="text-xs text-amber-300 font-bold block mt-0.5">
+                                🛡️ ¡Seguro de {currentPrizeObj.label} garantizado para esta partida!
+                              </span>
+                            )}
+                          </div>
                         ) : (
-                          <span className="text-red-400 font-bold text-base">
-                            Respuesta Incorrecta (Seguro alcanzado: {activeTeam.safeMoney.toLocaleString("es-ES")} €)
-                          </span>
+                          <div>
+                            <span className="text-red-400 font-black text-base block">
+                              ❌ Respuesta Incorrecta • ¡{activeTeam.name} queda eliminado de la Partida {matchNumber}!
+                            </span>
+                            <span className="text-xs text-slate-300 block mt-0.5">
+                              Premio asegurado alcanzado: <strong className="text-amber-300">{activeTeam.safeMoney.toLocaleString("es-ES")} €</strong>
+                            </span>
+                            {otherTeam.isAlive && (
+                              <span className="text-xs text-emerald-400 font-bold block mt-1">
+                                👉 {otherTeam.name} continúa jugando ahora en solitario hasta que pierda también.
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
 
                       <button
                         onClick={handleNextTurnOrRound}
-                        className="w-full sm:w-auto px-6 py-3 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs uppercase tracking-wider transition shadow-lg"
+                        className="w-full md:w-auto px-6 py-3.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs uppercase tracking-wider transition shadow-lg shrink-0 cursor-pointer"
                       >
-                        {roundTeamStep === 0
-                          ? `Continuar: Turno de ${teams[1].name} (Ronda ${currentRound})`
-                          : (currentRound >= 15 ? "Ver Podio Final" : `Siguiente Ronda (${currentRound + 1} de 15)`)}
+                        {(() => {
+                          const isCurrentAlive = activeTeam.isAlive;
+                          const isOtherAlive = otherTeam.isAlive;
+
+                          if (isOtherAlive && isCurrentAlive) {
+                            return `Continuar: Turno de ${otherTeam.name} (Nivel ${otherTeam.level}) ❯`;
+                          }
+                          if (isOtherAlive && !isCurrentAlive) {
+                            return `Continuar con ${otherTeam.name} en solitario (Nivel ${otherTeam.level}) ❯`;
+                          }
+                          if (!isOtherAlive && isCurrentAlive) {
+                            return `Continuar: Siguiente pregunta para ${activeTeam.name} (Nivel ${activeTeam.level}) ❯`;
+                          }
+                          // Ambos terminaron
+                          return `Finalizar Partida ${matchNumber} • Ver Resultados ❯`;
+                        })()}
                       </button>
                     </div>
                   )}
@@ -1864,55 +2092,241 @@
               </div>
             )}
 
-            {/* 5. FIN DE PARTIDA */}
-            {gameState === "FINISHED" && (
-              <div className="bg-slate-950/95 border-2 border-amber-400 rounded-2xl p-6 sm:p-10 max-w-lg mx-auto w-full text-center shadow-2xl">
-                <h2 className="text-2xl sm:text-3xl font-black text-amber-400 tracking-wider uppercase">
-                  Concurso Finalizado
-                </h2>
-                <p className="text-slate-400 text-xs sm:text-sm mt-1 mb-6">
-                  Se han completado las 15 rondas para ambos equipos.
-                </p>
+            {/* 5. FIN DE LA PARTIDA (RESUMEN + OPCIONES: TERMINAR PARTIDA O JUGAR SIGUIENTE) */}
+            {gameState === "MATCH_SUMMARY" && matchHistory.length > 0 && (() => {
+              const lastMatch = matchHistory[matchHistory.length - 1];
+              const t0Total = matchHistory.reduce((sum, m) => sum + (m.team0 || 0), 0);
+              const t1Total = matchHistory.reduce((sum, m) => sum + (m.team1 || 0), 0);
+              const numMatches = matchHistory.length;
 
-                <div className="space-y-3 mb-6 text-left">
-                  {teams.map((t, i) => {
-                    const other = teams[i === 0 ? 1 : 0];
-                    const isWinner = t.money >= other.money && t.money > 0;
-                    return (
-                      <div
-                        key={t.id}
-                        className={`p-4 rounded-xl border ${
-                          isWinner ? "bg-blue-950/80 border-amber-400" : "bg-slate-900 border-slate-800"
-                        }`}
-                      >
-                        <div className="flex justify-between items-center text-xs text-slate-400 mb-1">
-                          <span className="font-bold text-slate-200">{t.name}</span>
-                          {isWinner && <span className="text-amber-400 font-black uppercase">Ganador</span>}
+              return (
+                <div className="bg-slate-950/95 border-2 border-amber-400 rounded-2xl p-6 sm:p-10 max-w-2xl mx-auto w-full text-center shadow-2xl">
+                  <div className="inline-block px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40 text-xs font-black uppercase tracking-wider mb-2">
+                    Partida {lastMatch.match} Finalizada
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-black text-white tracking-wider uppercase mb-2">
+                    Resultados de la Partida {lastMatch.match}
+                  </h2>
+                  <p className="text-slate-400 text-xs sm:text-sm mb-6 max-w-md mx-auto">
+                    Ambos equipos han concluido la <strong>Partida {lastMatch.match}</strong>. Pulsa <strong>&ldquo;Terminar Partida&rdquo;</strong> para proclamar al ganador definitivo o continúa disputando otra ronda (2 o 3 partidas).
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 text-left">
+                    {/* Equipo 1 */}
+                    <div className="p-4 rounded-xl bg-blue-950/70 border-2 border-blue-500/40 shadow-lg">
+                      <div className="flex items-center justify-between text-xs text-blue-300 font-bold mb-1">
+                        <span>{teams[0].name}</span>
+                        <span className="bg-blue-600 text-white px-1.5 py-0.5 rounded font-black">E1</span>
+                      </div>
+                      <div className="text-3xl font-black text-white my-1">
+                        {lastMatch.team0.toLocaleString("es-ES")} €
+                      </div>
+                      <div className="text-xs text-slate-300">
+                        Nivel alcanzado: <strong>Nivel {lastMatch.team0Level}</strong>
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-1">
+                        {lastMatch.team0 >= 32000 ? "🛡️ 2º Seguro asegurado (32.000 €)" : lastMatch.team0 >= 1000 ? "🛡️ 1º Seguro asegurado (1.000 €)" : "Sin seguro alcanzado (0 €)"}
+                      </div>
+                    </div>
+
+                    {/* Equipo 2 */}
+                    <div className="p-4 rounded-xl bg-purple-950/70 border-2 border-purple-500/40 shadow-lg">
+                      <div className="flex items-center justify-between text-xs text-purple-300 font-bold mb-1">
+                        <span>{teams[1].name}</span>
+                        <span className="bg-purple-600 text-white px-1.5 py-0.5 rounded font-black">E2</span>
+                      </div>
+                      <div className="text-3xl font-black text-white my-1">
+                        {lastMatch.team1.toLocaleString("es-ES")} €
+                      </div>
+                      <div className="text-xs text-slate-300">
+                        Nivel alcanzado: <strong>Nivel {lastMatch.team1Level}</strong>
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-1">
+                        {lastMatch.team1 >= 32000 ? "🛡️ 2º Seguro asegurado (32.000 €)" : lastMatch.team1 >= 1000 ? "🛡️ 1º Seguro asegurado (1.000 €)" : "Sin seguro alcanzado (0 €)"}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Resumen Acumulado si se han jugado 2 o más partidas */}
+                  {numMatches >= 2 && (
+                    <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 text-xs text-slate-300 mb-6 text-left">
+                      <div className="text-amber-400 font-bold mb-1.5 uppercase tracking-wider text-[11px]">
+                        📊 Total Acumulado tras {numMatches} partidas:
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 text-sm font-black">
+                        <div className="p-2.5 rounded bg-blue-950/40 border border-blue-500/30 text-blue-200">
+                          <div>{teams[0].name}</div>
+                          <div className="text-xl text-amber-300 font-black mt-1">
+                            {t0Total.toLocaleString("es-ES")} €
+                          </div>
+                          <div className="text-[11px] text-slate-400 font-normal">
+                            Media: {Math.round(t0Total / numMatches).toLocaleString("es-ES")} €/partida
+                          </div>
                         </div>
-                        <div className="text-2xl font-black text-white">
-                          {t.money.toLocaleString("es-ES")} €
+                        <div className="p-2.5 rounded bg-purple-950/40 border border-purple-500/30 text-purple-200">
+                          <div>{teams[1].name}</div>
+                          <div className="text-xl text-amber-300 font-black mt-1">
+                            {t1Total.toLocaleString("es-ES")} €
+                          </div>
+                          <div className="text-[11px] text-slate-400 font-normal">
+                            Media: {Math.round(t1Total / numMatches).toLocaleString("es-ES")} €/partida
+                          </div>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+                    </div>
+                  )}
 
-                <button
-                  onClick={() => setGameState("SETUP")}
-                  className="w-full py-3.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-sm uppercase tracking-wider transition"
-                >
-                  Jugar Nueva Partida
-                </button>
-              </div>
-            )}
+                  {/* BOTÓN TERMINAR PARTIDA Y BOTÓN JUGAR SIGUIENTE PARTIDA */}
+                  <div className="space-y-3">
+                    <button
+                      onClick={handleFinishTournament}
+                      className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 font-black text-base uppercase tracking-wider transition shadow-xl shadow-amber-500/20 cursor-pointer"
+                    >
+                      🏆 Terminar Partida y Ver Ganador
+                    </button>
+
+                    {matchNumber < 3 && (
+                      <button
+                        onClick={handleStartNextMatch}
+                        className="w-full py-3.5 rounded-xl bg-blue-900/80 hover:bg-blue-800 border-2 border-blue-400/60 text-white font-black text-sm uppercase tracking-wider transition shadow-lg cursor-pointer"
+                      >
+                        Jugar Siguiente Partida (Partida {matchNumber + 1}) ➔
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* 6. FIN DEL TORNEO (GRAN FINAL TRAS 1, 2, 3 O MÁS PARTIDAS) */}
+            {gameState === "FINISHED" && matchHistory.length > 0 && (() => {
+              const numMatches = matchHistory.length;
+              const t0Total = matchHistory.reduce((sum, m) => sum + (m.team0 || 0), 0);
+              const t1Total = matchHistory.reduce((sum, m) => sum + (m.team1 || 0), 0);
+              const t0Avg = Math.round(t0Total / numMatches);
+              const t1Avg = Math.round(t1Total / numMatches);
+              const isT0Winner = t0Total > t1Total;
+              const isT1Winner = t1Total > t0Total;
+              const winnerName = isT0Winner ? teams[0].name : (isT1Winner ? teams[1].name : null);
+              const winnerMoney = Math.max(t0Total, t1Total);
+              const winnerAvg = isT0Winner ? t0Avg : (isT1Winner ? t1Avg : t0Avg);
+
+              return (
+                <div className="bg-slate-950/95 border-2 border-amber-400 rounded-2xl p-6 sm:p-10 max-w-2xl mx-auto w-full text-center shadow-2xl">
+                  <div className="inline-block text-4xl mb-2">🏆</div>
+                  <h2 className="text-2xl sm:text-3xl font-black text-amber-400 tracking-wider uppercase">
+                    Gran Final del Concurso
+                  </h2>
+                  <p className="text-slate-300 text-xs sm:text-sm mt-1 mb-6">
+                    Clasificación Definitiva tras {numMatches} {numMatches === 1 ? "Partida disputada" : "Partidas disputadas"}
+                  </p>
+
+                  {/* TABLA COMPARATIVA DE LAS PARTIDAS */}
+                  <div className="overflow-x-auto rounded-xl border border-slate-700 mb-6 shadow-xl">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-900 border-b border-slate-800 text-slate-400 font-bold uppercase text-[10px]">
+                        <tr>
+                          <th className="p-3">Equipo</th>
+                          {matchHistory.map((m, i) => (
+                            <th key={i} className="p-3 text-center">Partida {m.match || (i + 1)}</th>
+                          ))}
+                          <th className="p-3 text-right text-amber-400">TOTAL ACUMULADO</th>
+                          <th className="p-3 text-right">Media</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/80 bg-slate-950/60 font-semibold">
+                        <tr className={isT0Winner ? "bg-amber-500/10" : ""}>
+                          <td className="p-3 font-bold text-slate-100 flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                            <span>{teams[0].name}</span>
+                            {isT0Winner && <span className="text-amber-400 text-xs">👑</span>}
+                          </td>
+                          {matchHistory.map((m, i) => (
+                            <td key={i} className="p-3 text-center text-slate-300">
+                              {m.team0.toLocaleString("es-ES")} €
+                            </td>
+                          ))}
+                          <td className="p-3 text-right text-base font-black text-amber-300">
+                            {t0Total.toLocaleString("es-ES")} €
+                          </td>
+                          <td className="p-3 text-right text-slate-400">
+                            {t0Avg.toLocaleString("es-ES")} €
+                          </td>
+                        </tr>
+                        <tr className={isT1Winner ? "bg-amber-500/10" : ""}>
+                          <td className="p-3 font-bold text-slate-100 flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                            <span>{teams[1].name}</span>
+                            {isT1Winner && <span className="text-amber-400 text-xs">👑</span>}
+                          </td>
+                          {matchHistory.map((m, i) => (
+                            <td key={i} className="p-3 text-center text-slate-300">
+                              {m.team1.toLocaleString("es-ES")} €
+                            </td>
+                          ))}
+                          <td className="p-3 text-right text-base font-black text-amber-300">
+                            {t1Total.toLocaleString("es-ES")} €
+                          </td>
+                          <td className="p-3 text-right text-slate-400">
+                            {t1Avg.toLocaleString("es-ES")} €
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* ANUNCIO DEL CAMPEÓN */}
+                  <div className="p-5 rounded-xl bg-gradient-to-r from-blue-950 via-slate-900 to-purple-950 border-2 border-amber-400 mb-6 shadow-2xl">
+                    {winnerName ? (
+                      <>
+                        <div className="text-xs font-black uppercase tracking-widest text-amber-400 mb-1">
+                          ¡EQUIPO GRAN CAMPEÓN ABSOLUTO!
+                        </div>
+                        <div className="text-2xl sm:text-3xl font-black text-white">
+                          🎉 {winnerName} 🎉
+                        </div>
+                        <div className="text-lg font-black text-amber-300 mt-1">
+                          Total Acumulado: {winnerMoney.toLocaleString("es-ES")} €
+                        </div>
+                        <div className="text-xs text-slate-300 mt-0.5">
+                          Media: {winnerAvg.toLocaleString("es-ES")} € por partida ({numMatches} {numMatches === 1 ? "partida" : "partidas"})
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-xs font-black uppercase tracking-widest text-amber-400 mb-1">
+                          ¡EMPATE TOTAL!
+                        </div>
+                        <div className="text-2xl font-black text-white">
+                          🤝 {teams[0].name} y {teams[1].name} 🤝
+                        </div>
+                        <div className="text-base font-bold text-amber-300 mt-1">
+                          Ambos equipos empatan con {t0Total.toLocaleString("es-ES")} € acumulados
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="space-y-3">
+                    <button
+                      onClick={handleResetTournament}
+                      className="w-full py-3.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-sm uppercase tracking-wider transition shadow-lg cursor-pointer"
+                    >
+                      Jugar Nuevo Torneo
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
           </main>
 
             {/* PANEL LATERAL DE LA ESCALA DE PREMIOS (VISIBLE SIEMPRE EN ESCRITORIO Y TABLET) */}
             <aside className="hidden lg:block w-72 xl:w-80 shrink-0 sticky top-16">
               <PrizeLadderCard
-                currentRound={currentRound}
-                roundTeamStep={roundTeamStep}
+                activeTeamIndex={activeTeamIndex}
                 teams={teams}
+                matchNumber={matchNumber}
+                matchHistory={matchHistory}
                 gameState={gameState}
                 currentPrizeObj={currentPrizeObj}
                 isModal={false}
@@ -2030,9 +2444,10 @@
             <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-3 sm:p-4">
               <div className="max-w-sm w-full max-h-[92vh] overflow-y-auto">
                 <PrizeLadderCard
-                  currentRound={currentRound}
-                  roundTeamStep={roundTeamStep}
+                  activeTeamIndex={activeTeamIndex}
                   teams={teams}
+                  matchNumber={matchNumber}
+                  matchHistory={matchHistory}
                   gameState={gameState}
                   currentPrizeObj={currentPrizeObj}
                   isModal={true}
