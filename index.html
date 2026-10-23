@@ -1,0 +1,2092 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>¿Quién Quiere Ser Millonario? - Edición 2 Equipos</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            show: {
+              bg: '#040614',
+              blue: '#0d1538',
+              card: '#080d26',
+              gold: '#f59e0b',
+              silver: '#94a3b8',
+              line: '#38bdf8',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React 18 & ReactDOM & Babel -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    /* Fondo auténtico de plató de televisión */
+    body {
+      background: radial-gradient(circle at 50% 35%, #182252 0%, #080d26 50%, #02040d 100%);
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    /* Forma hexagonal / lozenge mítica de Quién quiere ser millonario */
+    .lozenge-shape {
+      clip-path: polygon(18px 0%, calc(100% - 18px) 0%, 100% 50%, calc(100% - 18px) 100%, 18px 100%, 0% 50%);
+    }
+
+    .lozenge-border {
+      background: linear-gradient(180deg, #94a3b8 0%, #334155 50%, #94a3b8 100%);
+      padding: 2px;
+      clip-path: polygon(19px 0%, calc(100% - 19px) 0%, 100% 50%, calc(100% - 19px) 100%, 19px 100%, 0% 50%);
+    }
+
+    /* Líneas metálicas laterales de conexión */
+    .connector-line {
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #64748b, #cbd5e1, #64748b, transparent);
+    }
+  </style>
+</head>
+<body class="h-full select-none overflow-x-hidden">
+  <div id="root" class="min-h-full flex flex-col"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // ESCALA OFICIAL DE 15 NIVELES
+    const PRIZE_LADDER = [
+      { level: 1, prize: 100, isSafe: false, label: "100 €" },
+      { level: 2, prize: 200, isSafe: false, label: "200 €" },
+      { level: 3, prize: 300, isSafe: false, label: "300 €" },
+      { level: 4, prize: 500, isSafe: false, label: "500 €" },
+      { level: 5, prize: 1000, isSafe: true, label: "1.000 €" }, // 1º Seguro
+      { level: 6, prize: 2000, isSafe: false, label: "2.000 €" },
+      { level: 7, prize: 4000, isSafe: false, label: "4.000 €" },
+      { level: 8, prize: 8000, isSafe: false, label: "8.000 €" },
+      { level: 9, prize: 16000, isSafe: false, label: "16.000 €" },
+      { level: 10, prize: 32000, isSafe: true, label: "32.000 €" }, // 2º Seguro
+      { level: 11, prize: 64000, isSafe: false, label: "64.000 €" },
+      { level: 12, prize: 125000, isSafe: false, label: "125.000 €" },
+      { level: 13, prize: 250000, isSafe: false, label: "250.000 €" },
+      { level: 14, prize: 500000, isSafe: false, label: "500.000 €" },
+      { level: 15, prize: 1000000, isSafe: true, label: "1.000.000 €" }, // Premio Final
+    ];
+
+    // BANCO EXTENSO DE PREGUNTAS (CON LA MUSICAL EN RONDA 2 Y PREGUNTAS BÍBLICAS)
+    const QUESTIONS_DB = [
+  {
+    "id": 101,
+    "level": 1,
+    "category": "HISTORIA BÍBLICA",
+    "question": "¿Quién construyó un arca por mandato de Dios?",
+    "options": [
+      "Abraham",
+      "Noé",
+      "Moisés",
+      "David"
+    ],
+    "correct": 1,
+    "hint": "Dios mandó a Noé construir un arca para sobrevivir al diluvio (Génesis 6)."
+  },
+  {
+    "id": 102,
+    "level": 1,
+    "category": "VERSÍCULOS BÍBLICOS",
+    "question": "¿De dónde es este versículo? «En el principio creó Dios los cielos y la tierra».",
+    "options": [
+      "Génesis 1:1",
+      "Salmo 19:1",
+      "Juan 1:1",
+      "Génesis 2:7"
+    ],
+    "correct": 0,
+    "hint": "Las primeras palabras con las que se abre la Biblia (Génesis 1:1)."
+  },
+  {
+    "id": 103,
+    "level": 1,
+    "category": "DEPORTES",
+    "question": "¿Cuántos jugadores por equipo juegan a la vez en un partido oficial de fútbol 11?",
+    "options": [
+      "10",
+      "11",
+      "12",
+      "9"
+    ],
+    "correct": 1,
+    "hint": "El propio nombre del formato lo dice claramente."
+  },
+  {
+    "id": 104,
+    "level": 1,
+    "category": "GEOGRAFÍA",
+    "question": "¿En qué país se encuentra la famosa Torre Eiffel?",
+    "options": [
+      "Italia",
+      "Francia",
+      "Alemania",
+      "Reino Unido"
+    ],
+    "correct": 1,
+    "hint": "En la capital gala, París."
+  },
+  {
+    "id": 201,
+    "level": 2,
+    "category": "MÚSICA (FRAGMENTO DE 5 SEGUNDOS)",
+    "question": "Escucha el fragmento de audio de 5 segundos: ¿Cómo se titula este temazo de David Guetta y Sia?",
+    "options": [
+      "Titanium",
+      "Chandelier",
+      "She Wolf",
+      "Flames"
+    ],
+    "correct": 0,
+    "audioSrc": "./audio/titanium.mp3",
+    "audioStart": 42,
+    "audioDuration": 5,
+    "hint": "Lleva el nombre de un metal indestructible y superresistente: 'I am titanium'."
+  },
+  {
+    "id": 202,
+    "level": 2,
+    "category": "HISTORIA BÍBLICA",
+    "question": "¿En qué ciudad nació Jesús?",
+    "options": [
+      "Nazaret",
+      "Jerusalén",
+      "Belén",
+      "Capernaúm"
+    ],
+    "correct": 2,
+    "hint": "Jesús nació en Belén de Judea (Mateo 2:1)."
+  },
+  {
+    "id": 203,
+    "level": 2,
+    "category": "GASTRONOMÍA",
+    "question": "¿Qué ingrediente principal lleva la tortilla de patatas tradicional además de huevos y patatas?",
+    "options": [
+      "Queso",
+      "Cebolla",
+      "Pimiento",
+      "Zanahoria"
+    ],
+    "correct": 1,
+    "hint": "El eterno debate nacional entre los que la prefieren con o sin ella."
+  },
+  {
+    "id": 301,
+    "level": 3,
+    "category": "HISTORIA BÍBLICA",
+    "question": "¿Quién derrotó al gigante Goliat?",
+    "options": [
+      "Saúl",
+      "Jonatán",
+      "Salomón",
+      "David"
+    ],
+    "correct": 3,
+    "hint": "David venció a Goliat con una honda, una piedra y confiando en Dios (1 Samuel 17)."
+  },
+  {
+    "id": 302,
+    "level": 3,
+    "category": "CIENCIA",
+    "question": "¿Cuál es el planeta más grande de nuestro Sistema Solar?",
+    "options": [
+      "Saturno",
+      "Júpiter",
+      "Marte",
+      "Neptuno"
+    ],
+    "correct": 1,
+    "hint": "Gigante gaseoso con una gran Mancha Roja."
+  },
+  {
+    "id": 303,
+    "level": 3,
+    "category": "HISTORIA",
+    "question": "¿En qué año llegó el ser humano por primera vez a la Luna en la misión Apolo 11?",
+    "options": [
+      "1965",
+      "1969",
+      "1972",
+      "1975"
+    ],
+    "correct": 1,
+    "hint": "A finales de los años 60, con Neil Armstrong."
+  },
+  {
+    "id": 401,
+    "level": 4,
+    "category": "HISTORIA BÍBLICA",
+    "question": "¿Cuántos discípulos escogió Jesús como apóstoles?",
+    "options": [
+      "7",
+      "10",
+      "12",
+      "40"
+    ],
+    "correct": 2,
+    "hint": "Jesús escogió a doce apóstoles (Lucas 6:13–16)."
+  },
+  {
+    "id": 402,
+    "level": 4,
+    "category": "DEPORTES",
+    "question": "¿Cuántos anillos componen el símbolo oficial de los Juegos Olímpicos?",
+    "options": [
+      "4",
+      "5",
+      "6",
+      "7"
+    ],
+    "correct": 1,
+    "hint": "Representan los continentes habitados del planeta."
+  },
+  {
+    "id": 403,
+    "level": 4,
+    "category": "CINE Y SERIES",
+    "question": "¿Cómo se llama el continente donde se desarrolla principalmente 'Juego de Tronos'?",
+    "options": [
+      "Narnia",
+      "Poniente (Westeros)",
+      "Tierra Media",
+      "Hogwarts"
+    ],
+    "correct": 1,
+    "hint": "Donde se encuentran Desembarco del Rey y el Muro."
+  },
+  {
+    "id": 501,
+    "level": 5,
+    "category": "HISTORIA BÍBLICA",
+    "question": "¿Qué juez de Israel era conocido por su gran fuerza?",
+    "options": [
+      "Gedeón",
+      "Sansón",
+      "Samuel",
+      "Nehemías"
+    ],
+    "correct": 1,
+    "hint": "Sansón recibió una fuerza extraordinaria relacionada con su consagración a Dios (Jueces 13–16)."
+  },
+  {
+    "id": 502,
+    "level": 5,
+    "category": "VERSÍCULOS BÍBLICOS",
+    "question": "¿De dónde es este versículo? «Jesús lloró».",
+    "options": [
+      "Juan 11:35",
+      "Lucas 19:41",
+      "Mateo 5:4",
+      "Juan 3:16"
+    ],
+    "correct": 0,
+    "hint": "Es el versículo más corto de la Biblia (Juan 11:35)."
+  },
+  {
+    "id": 503,
+    "level": 5,
+    "category": "CIENCIA",
+    "question": "¿Cuál es el símbolo químico del oro en la tabla periódica de los elementos?",
+    "options": [
+      "Or",
+      "Au",
+      "Ag",
+      "Fe"
+    ],
+    "correct": 1,
+    "hint": "Proviene de la palabra en latín 'aurum'."
+  },
+  {
+    "id": 601,
+    "level": 6,
+    "category": "HISTORIA BÍBLICA",
+    "question": "¿Qué profeta fue tragado por un gran pez?",
+    "options": [
+      "Elías",
+      "Isaías",
+      "Jonás",
+      "Jeremías"
+    ],
+    "correct": 2,
+    "hint": "Jonás estuvo tres días y tres noches en el vientre de un gran pez (Jonás 1:17)."
+  },
+  {
+    "id": 602,
+    "level": 6,
+    "category": "HISTORIA BÍBLICA",
+    "question": "¿De qué tribu de Israel descendía Jesús?",
+    "options": [
+      "De la tribu de Leví",
+      "De la tribu de Benjamín",
+      "De la tribu de Judá",
+      "De la tribu de Efraín"
+    ],
+    "correct": 2,
+    "hint": "Jesús pertenecía al linaje de David, de la tribu de Judá (Génesis 49:10; Mateo 1:1-3; Apocalipsis 5:5)."
+  },
+  {
+    "id": 603,
+    "level": 6,
+    "category": "MÚSICA",
+    "question": "¿De qué ciudad británica procedían los cuatro integrantes de 'The Beatles'?",
+    "options": [
+      "Londres",
+      "Manchester",
+      "Liverpool",
+      "Birmingham"
+    ],
+    "correct": 2,
+    "hint": "Ciudad portuaria famosa por The Cavern Club."
+  },
+  {
+    "id": 701,
+    "level": 7,
+    "category": "HISTORIA BÍBLICA",
+    "question": "¿Qué discípulo negó conocer a Jesús tres veces?",
+    "options": [
+      "Juan",
+      "Tomás",
+      "Andrés",
+      "Pedro"
+    ],
+    "correct": 3,
+    "hint": "Pedro negó a Jesús tres veces antes de que cantara el gallo (Lucas 22:54–62)."
+  },
+  {
+    "id": 702,
+    "level": 7,
+    "category": "VERSÍCULOS BÍBLICOS",
+    "question": "¿De dónde es este versículo? «Todo lo puedo en Cristo que me fortalece».",
+    "options": [
+      "Romanos 8:28",
+      "Filipenses 4:13",
+      "Gálatas 2:20",
+      "Efesios 6:10"
+    ],
+    "correct": 1,
+    "hint": "Carta de Pablo a la comunidad de Filipos (Filipenses 4:13)."
+  },
+  {
+    "id": 703,
+    "level": 7,
+    "category": "DEPORTES",
+    "question": "¿Qué tenista español ostenta el récord histórico de 14 títulos de Roland Garros?",
+    "options": [
+      "Carlos Alcaraz",
+      "Rafael Nadal",
+      "Juan Carlos Ferrero",
+      "Carlos Moyá"
+    ],
+    "correct": 1,
+    "hint": "El Rey de la tierra batida, nacido en Manacor."
+  },
+  {
+    "id": 801,
+    "level": 8,
+    "category": "HISTORIA BÍBLICA",
+    "question": "¿Qué joven rey encontró el libro de la Ley durante las reparaciones del templo?",
+    "options": [
+      "Josías",
+      "Ezequías",
+      "Roboam",
+      "Acaz"
+    ],
+    "correct": 0,
+    "hint": "Durante el reinado de Josías, el sacerdote Hilcías encontró el libro de la Ley en el templo (2 Reyes 22:3–13)."
+  },
+  {
+    "id": 802,
+    "level": 8,
+    "category": "VERSÍCULOS BÍBLICOS",
+    "question": "¿De dónde es este versículo? «Pedid, y se os dará; buscad, y hallaréis».",
+    "options": [
+      "Mateo 6:33",
+      "Juan 14:6",
+      "Mateo 7:7",
+      "Lucas 6:31"
+    ],
+    "correct": 2,
+    "hint": "Parte del Sermón del Monte en el Evangelio de Mateo (Mateo 7:7)."
+  },
+  {
+    "id": 803,
+    "level": 8,
+    "category": "HISTORIA",
+    "question": "¿Qué muro divisorio fue derribado en noviembre de 1989 simbolizando el fin de la Guerra Fría?",
+    "options": [
+      "Muro de Adriano",
+      "Muro de Berlín",
+      "Gran Muralla China",
+      "Línea Maginot"
+    ],
+    "correct": 1,
+    "hint": "Dividía la capital de Alemania en dos zonas."
+  },
+  {
+    "id": 901,
+    "level": 9,
+    "category": "HISTORIA BÍBLICA",
+    "question": "¿Quién interpretó la escritura que apareció en la pared durante un banquete del rey Belsasar?",
+    "options": [
+      "Esdras",
+      "Daniel",
+      "Ezequiel",
+      "José"
+    ],
+    "correct": 1,
+    "hint": "Daniel interpretó la misteriosa escritura (Daniel 5)."
+  },
+  {
+    "id": 902,
+    "level": 9,
+    "category": "VERSÍCULOS BÍBLICOS",
+    "question": "¿De dónde es este versículo? «Lámpara es a mis pies tu palabra, y lumbrera a mi camino».",
+    "options": [
+      "Proverbios 3:5",
+      "Salmo 119:105",
+      "Salmo 23:1",
+      "Josué 1:9"
+    ],
+    "correct": 1,
+    "hint": "Del salmo más extenso de la Biblia dedicado a la palabra de Dios (Salmo 119:105)."
+  },
+  {
+    "id": 903,
+    "level": 9,
+    "category": "GEOGRAFÍA",
+    "question": "¿Qué país del mundo cuenta con el mayor número de islas en su territorio (más de 260.000)?",
+    "options": [
+      "Indonesia",
+      "Filipinas",
+      "Suecia",
+      "Grecia"
+    ],
+    "correct": 2,
+    "hint": "Un país nórdico cuya capital está formada por 14 islas."
+  },
+  {
+    "id": 1001,
+    "level": 10,
+    "category": "HISTORIA BÍBLICA",
+    "question": "¿Qué mujer escondió a los espías israelitas en Jericó?",
+    "options": [
+      "Débora",
+      "Rut",
+      "Rahab",
+      "Abigail"
+    ],
+    "correct": 2,
+    "hint": "Rahab escondió a los espías y los ayudó a escapar (Josué 2)."
+  },
+  {
+    "id": 1002,
+    "level": 10,
+    "category": "VERSÍCULOS BÍBLICOS",
+    "question": "¿De dónde es este versículo? «Porque por gracia sois salvos por medio de la fe».",
+    "options": [
+      "Romanos 5:8",
+      "Efesios 2:8",
+      "Tito 2:11",
+      "Hebreos 11:1"
+    ],
+    "correct": 1,
+    "hint": "Epístola de Pablo a los creyentes de Éfeso (Efesios 2:8)."
+  },
+  {
+    "id": 1003,
+    "level": 10,
+    "category": "CIENCIA",
+    "question": "¿Cuál es el hueso más pequeño del cuerpo humano?",
+    "options": [
+      "Yunque",
+      "Martillo",
+      "Estribo",
+      "Falange"
+    ],
+    "correct": 2,
+    "hint": "Se encuentra en el oído medio."
+  },
+  {
+    "id": 1101,
+    "level": 11,
+    "category": "HISTORIA BÍBLICA",
+    "question": "¿Qué profeta confrontó al rey David por su pecado con Betsabé?",
+    "options": [
+      "Elías",
+      "Samuel",
+      "Eliseo",
+      "Natán"
+    ],
+    "correct": 3,
+    "hint": "Natán confrontó a David con la parábola de la corderita (2 Samuel 12:1–7)."
+  },
+  {
+    "id": 1102,
+    "level": 11,
+    "category": "HISTORIA BÍBLICA",
+    "question": "¿Cómo se llamaban las dos parteras hebreas que desobedecieron la orden del faraón de matar a los niños varones recién nacidos?",
+    "options": [
+      "Séfora y Miriam",
+      "Débora y Jael",
+      "Sifra y Fúa",
+      "Raquel y Lea"
+    ],
+    "correct": 2,
+    "hint": "En Éxodo 1:15-21, Sifra y Fúa temieron a Dios y no obedecieron la orden del faraón."
+  },
+  {
+    "id": 1103,
+    "level": 11,
+    "category": "DEPORTES",
+    "question": "¿Quién es el único futbolista en ganar 3 Copas Mundiales de la FIFA como jugador?",
+    "options": [
+      "Pelé",
+      "Diego Maradona",
+      "Zinedine Zidane",
+      "Garrincha"
+    ],
+    "correct": 0,
+    "hint": "O Rei de Brasil, campeón en 1958, 1962 y 1970."
+  },
+  {
+    "id": 1201,
+    "level": 12,
+    "category": "HISTORIA BÍBLICA",
+    "question": "¿Qué rey pidió a Dios sabiduría para gobernar a su pueblo?",
+    "options": [
+      "Salomón",
+      "Saúl",
+      "Josías",
+      "Acab"
+    ],
+    "correct": 0,
+    "hint": "Salomón pidió sabiduría para gobernar al pueblo de Dios (1 Reyes 3:5–12)."
+  },
+  {
+    "id": 1202,
+    "level": 12,
+    "category": "VERSÍCULOS BÍBLICOS",
+    "question": "¿De dónde es este versículo? «Toda la Escritura es inspirada por Dios, y útil para enseñar, para redargüir, para corregir, para instruir en justicia».",
+    "options": [
+      "Hebreos 4:12",
+      "Salmo 119:105",
+      "2 Timoteo 3:16",
+      "2 Pedro 1:20"
+    ],
+    "correct": 2,
+    "hint": "Segunda carta a Timoteo (2 Timoteo 3:16)."
+  },
+  {
+    "id": 1203,
+    "level": 12,
+    "category": "HISTORIA",
+    "question": "¿Cuál fue la primera dinastía imperial que unificó China bajo Qin Shi Huang en el 221 a.C.?",
+    "options": [
+      "Dinastía Han",
+      "Dinastía Tang",
+      "Dinastía Qin",
+      "Dinastía Ming"
+    ],
+    "correct": 2,
+    "hint": "De su pronunciación se originó el nombre de China."
+  },
+  {
+    "id": 1301,
+    "level": 13,
+    "category": "HISTORIA BÍBLICA",
+    "question": "¿Cómo se llamaba el sumo sacerdote que encontró el libro de la Ley en el templo durante el reinado de Josías?",
+    "options": [
+      "Sadoc",
+      "Hilcías",
+      "Abiatar",
+      "Aarón"
+    ],
+    "correct": 1,
+    "hint": "Hilcías encontró el libro de la Ley en la casa del Señor (2 Reyes 22:8)."
+  },
+  {
+    "id": 1302,
+    "level": 13,
+    "category": "HISTORIA BÍBLICA",
+    "question": "¿Cuál es el libro más extenso de la Biblia, compuesto por un total de 150 poemas y cánticos?",
+    "options": [
+      "Génesis",
+      "Isaías",
+      "Salmos",
+      "Proverbios"
+    ],
+    "correct": 2,
+    "hint": "Salmos, muchos de ellos compuestos por el rey David."
+  },
+  {
+    "id": 1303,
+    "level": 13,
+    "category": "DEPORTES",
+    "question": "¿En qué año se fundó el Fútbol Club Barcelona de la mano de Joan Gamper?",
+    "options": [
+      "1899",
+      "1902",
+      "1905",
+      "1895"
+    ],
+    "correct": 0,
+    "hint": "A finales del siglo XIX, en el mes de noviembre."
+  },
+  {
+    "id": 1401,
+    "level": 14,
+    "category": "HISTORIA BÍBLICA",
+    "question": "¿Qué profeta recibió la visión de un valle lleno de huesos secos?",
+    "options": [
+      "Daniel",
+      "Zacarías",
+      "Ezequiel",
+      "Oseas"
+    ],
+    "correct": 2,
+    "hint": "Ezequiel vio un valle de huesos secos que volvían a vivir (Ezequiel 37:1–14)."
+  },
+  {
+    "id": 1402,
+    "level": 14,
+    "category": "CIENCIA",
+    "question": "¿Cuál es la velocidad exacta de la luz en el vacío según el Sistema Internacional de Unidades?",
+    "options": [
+      "299.792.458 m/s",
+      "300.000.000 m/s",
+      "298.540.120 m/s",
+      "301.200.400 m/s"
+    ],
+    "correct": 0,
+    "hint": "Cifra exacta que comienza por 299.792."
+  },
+  {
+    "id": 1501,
+    "level": 15,
+    "category": "HISTORIA BÍBLICA",
+    "question": "Según Hechos 13:22, ¿qué rey fue descrito como un hombre conforme al corazón de Dios?",
+    "options": [
+      "Ezequías",
+      "Josías",
+      "Salomón",
+      "David"
+    ],
+    "correct": 3,
+    "hint": "Hechos 13:22 identifica a David como un hombre conforme al corazón de Dios."
+  },
+  {
+    "id": 1502,
+    "level": 15,
+    "category": "CURIOSIDADES DE LA TV",
+    "question": "En 1999, John Carpenter fue el primer ganador del millón en TV usando el comodín de la llamada únicamente para...",
+    "options": [
+      "Decirle a su padre que iba a ganar el millón",
+      "Preguntar la capital de Kazajistán",
+      "Pedirle que le comprara un coche",
+      "Agradecerle el apoyo a su familia"
+    ],
+    "correct": 0,
+    "hint": "Llamó sabiendo ya la respuesta definitiva solo para celebrarlo."
+  }
+];
+
+    // MOTOR DE AUDIO SINTÉTICO (WEB AUDIO API)
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+        this.droneOsc = null;
+        this.droneGain = null;
+      }
+      init() {
+        if (!this.ctx && (window.AudioContext || window.webkitAudioContext)) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContext();
+        }
+        if (this.ctx && this.ctx.state === "suspended") {
+          this.ctx.resume();
+        }
+      }
+      setMuted(m) {
+        this.muted = m;
+        if (m && this.droneGain) {
+          this.droneGain.gain.setValueAtTime(0, this.ctx.currentTime);
+        }
+      }
+      startSuspenseDrone() {
+        if (this.muted || !this.ctx) return;
+        this.stopSuspenseDrone();
+        try {
+          const now = this.ctx.currentTime;
+          this.droneOsc = this.ctx.createOscillator();
+          const filter = this.ctx.createBiquadFilter();
+          this.droneGain = this.ctx.createGain();
+
+          this.droneOsc.type = "sawtooth";
+          this.droneOsc.frequency.setValueAtTime(55, now);
+          filter.type = "lowpass";
+          filter.frequency.setValueAtTime(140, now);
+
+          this.droneGain.gain.setValueAtTime(0.001, now);
+          this.droneGain.gain.exponentialRampToValueAtTime(0.06, now + 1.2);
+
+          this.droneOsc.connect(filter);
+          filter.connect(this.droneGain);
+          this.droneGain.connect(this.ctx.destination);
+          this.droneOsc.start(now);
+        } catch(e) {}
+      }
+      stopSuspenseDrone() {
+        if (this.droneOsc && this.ctx) {
+          try {
+            this.droneGain?.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
+            setTimeout(() => {
+              try { this.droneOsc?.stop(); this.droneOsc = null; } catch(_) {}
+            }, 350);
+          } catch(e) { this.droneOsc = null; }
+        }
+      }
+      playTick(urgent = false) {
+        if (this.muted || !this.ctx) return;
+        try {
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          const freq = urgent ? 880 : 440;
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(freq, now);
+          osc.frequency.exponentialRampToValueAtTime(freq * 0.5, now + 0.08);
+          gain.gain.setValueAtTime(urgent ? 0.15 : 0.06, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.08);
+        } catch(e) {}
+      }
+      playSelect() {
+        if (this.muted || !this.ctx) return;
+        try {
+          const now = this.ctx.currentTime;
+          [220, 330].forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.frequency.setValueAtTime(freq, now + idx * 0.05);
+            gain.gain.setValueAtTime(0.12, now + idx * 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.25);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + idx * 0.05);
+            osc.stop(now + idx * 0.05 + 0.3);
+          });
+        } catch(e) {}
+      }
+      playLifeline() {
+        if (this.muted || !this.ctx) return;
+        try {
+          const now = this.ctx.currentTime;
+          [523.25, 659.25, 783.99].forEach((freq, i) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.frequency.setValueAtTime(freq, now + i * 0.08);
+            gain.gain.setValueAtTime(0.12, now + i * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.4);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + i * 0.08);
+            osc.stop(now + i * 0.08 + 0.45);
+          });
+        } catch(e) {}
+      }
+      playCorrect() {
+        this.stopSuspenseDrone();
+        if (this.muted || !this.ctx) return;
+        try {
+          const now = this.ctx.currentTime;
+          [392.0, 523.25, 659.25, 783.99].forEach((freq, i) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.frequency.setValueAtTime(freq, now + i * 0.1);
+            gain.gain.setValueAtTime(0.2, now + i * 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.7);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + i * 0.1);
+            osc.stop(now + i * 0.1 + 0.75);
+          });
+        } catch(e) {}
+      }
+      playWrong() {
+        this.stopSuspenseDrone();
+        if (this.muted || !this.ctx) return;
+        try {
+          const now = this.ctx.currentTime;
+          [220, 196, 174].forEach((freq, i) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = "sawtooth";
+            osc.frequency.setValueAtTime(freq, now + i * 0.12);
+            gain.gain.setValueAtTime(0.2, now + i * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.6);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + i * 0.12);
+            osc.stop(now + i * 0.12 + 0.65);
+          });
+        } catch(e) {}
+      }
+      playThemeReveal() {
+        if (this.muted || !this.ctx) return;
+        try {
+          const now = this.ctx.currentTime;
+          [261.63, 329.63, 392.0].forEach((freq, i) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.frequency.setValueAtTime(freq, now + i * 0.1);
+            gain.gain.setValueAtTime(0.15, now + i * 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.5);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + i * 0.1);
+            osc.stop(now + i * 0.1 + 0.55);
+          });
+        } catch(e) {}
+      }
+    }
+
+    const sound = new SoundEngine();
+
+    // COMPONENTE DE LA ESCALA DE PREMIOS (LATERAL Y MODAL)
+    function PrizeLadderCard({ currentRound, roundTeamStep, teams, gameState, currentPrizeObj, isModal, onClose }) {
+      const activeTeam = teams[roundTeamStep] || teams[0];
+
+      return (
+        <div className="bg-slate-950/95 border border-slate-700/80 rounded-2xl p-4 shadow-2xl backdrop-blur-md w-full">
+          {/* Cabecera del Panel */}
+          <div className="flex items-center justify-between border-b border-slate-800 pb-2.5 mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-amber-400 text-sm">◆</span>
+              <span className="text-xs font-black uppercase tracking-widest text-slate-100">
+                Escala de Premios
+              </span>
+            </div>
+            {isModal ? (
+              <button
+                onClick={onClose}
+                className="text-slate-300 hover:text-white text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 font-bold border border-slate-700"
+              >
+                ✕ Cerrar
+              </button>
+            ) : (
+              <span className="text-[10px] font-black uppercase text-amber-400 bg-amber-400/10 border border-amber-400/30 px-2 py-0.5 rounded-full">
+                Ronda {currentRound} / 15
+              </span>
+            )}
+          </div>
+
+          {/* Tarjeta: Por dónde van ahora */}
+          <div className="mb-3.5 p-3 rounded-xl bg-gradient-to-r from-blue-950/80 to-slate-900 border border-amber-500/40 shadow-inner">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-amber-400 flex items-center justify-between">
+              <span>En juego en esta ronda:</span>
+              <span className="text-slate-300">Ronda {currentRound} de 15</span>
+            </div>
+            <div className="text-2xl font-black text-white tracking-wide mt-0.5">
+              {currentPrizeObj.label}
+            </div>
+            {gameState !== "SETUP" && gameState !== "FINISHED" && (
+              <div className="text-xs text-slate-300 mt-1 flex items-center gap-1.5">
+                <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                <span>Turno actual:</span>
+                <strong className="text-amber-300">{activeTeam.name}</strong>
+                <span className="text-slate-400 text-[10px]">({roundTeamStep + 1}/2)</span>
+              </div>
+            )}
+          </div>
+
+          {/* Posición económica de cada equipo */}
+          <div className="grid grid-cols-2 gap-2 text-xs mb-3.5">
+            <div className="p-2 rounded-lg bg-blue-950/50 border border-blue-500/30">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-blue-300 truncate">{teams[0].name}</span>
+                <span className="text-[9px] bg-blue-600 text-white font-black px-1 rounded">E1</span>
+              </div>
+              <div className="text-sm font-black text-white mt-0.5">
+                {teams[0].money.toLocaleString("es-ES")} €
+              </div>
+              <div className="text-[9px] text-slate-400">
+                Seguro: {teams[0].safeMoney.toLocaleString("es-ES")} €
+              </div>
+            </div>
+
+            <div className="p-2 rounded-lg bg-purple-950/50 border border-purple-500/30">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-purple-300 truncate">{teams[1].name}</span>
+                <span className="text-[9px] bg-purple-600 text-white font-black px-1 rounded">E2</span>
+              </div>
+              <div className="text-sm font-black text-white mt-0.5">
+                {teams[1].money.toLocaleString("es-ES")} €
+              </div>
+              <div className="text-[9px] text-slate-400">
+                Seguro: {teams[1].safeMoney.toLocaleString("es-ES")} €
+              </div>
+            </div>
+          </div>
+
+          {/* Lista de los 15 Escalones (de 15 a 1) */}
+          <div className="space-y-1">
+            {[...PRIZE_LADDER].reverse().map((p) => {
+              const isCurrent = p.level === currentRound;
+              const isPassed = p.level < currentRound;
+              const isE1Here = teams[0].money === p.prize && teams[0].money > 0;
+              const isE2Here = teams[1].money === p.prize && teams[1].money > 0;
+
+              let rowClasses = "text-amber-400/90 font-semibold hover:bg-slate-900/60";
+              let numClass = "text-amber-500/70";
+              let labelClass = "text-amber-300";
+
+              if (isCurrent) {
+                rowClasses = "bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black shadow-lg shadow-amber-400/30 ring-2 ring-amber-300 scale-[1.02]";
+                numClass = "text-slate-950 font-black";
+                labelClass = "text-slate-950 font-black";
+              } else if (p.isSafe) {
+                rowClasses = "text-white font-black bg-blue-950/40 border border-slate-700/60";
+                numClass = "text-white font-black";
+                labelClass = "text-white font-black";
+              } else if (isPassed) {
+                rowClasses = "text-slate-400/60 font-medium bg-slate-950/30";
+                numClass = "text-slate-500";
+                labelClass = "text-slate-400/80";
+              }
+
+              return (
+                <div
+                  key={p.level}
+                  className={`flex items-center justify-between py-1 px-2.5 rounded text-xs transition-all ${rowClasses}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className={`w-5 text-right font-mono text-[11px] ${numClass}`}>
+                      {p.level}
+                    </span>
+                    <span className={isCurrent ? "text-slate-950 font-black" : p.isSafe ? "text-white" : "text-amber-500"}>
+                      ◆
+                    </span>
+                    <span className={`tracking-wide ${labelClass}`}>
+                      {p.label}
+                    </span>
+                    {p.isSafe && !isCurrent && (
+                      <span className="text-[8px] uppercase tracking-wider text-slate-300 font-bold bg-slate-800/80 px-1 py-0.2 rounded border border-slate-700">
+                        Seguro
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Indicadores en el escalón */}
+                  <div className="flex items-center gap-1">
+                    {isCurrent && (
+                      <span className="text-[8px] uppercase font-black bg-slate-950 text-amber-300 px-1.5 py-0.5 rounded shadow tracking-wider">
+                        Jugando
+                      </span>
+                    )}
+                    {isE1Here && (
+                      <span className="text-[9px] font-black bg-blue-600 text-white px-1.5 py-0.5 rounded shadow ring-1 ring-blue-300" title={`${teams[0].name} tiene este premio`}>
+                        E1
+                      </span>
+                    )}
+                    {isE2Here && (
+                      <span className="text-[9px] font-black bg-purple-600 text-white px-1.5 py-0.5 rounded shadow ring-1 ring-purple-300" title={`${teams[1].name} tiene este premio`}>
+                        E2
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Leyenda */}
+          <div className="mt-3 pt-2.5 border-t border-slate-800 text-[10px] text-slate-400 flex flex-wrap items-center justify-between gap-1">
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-amber-400"></span> En juego
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-white"></span> Seguro
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="px-1 bg-blue-600 text-white rounded text-[8px] font-bold">E1</span> / <span className="px-1 bg-purple-600 text-white rounded text-[8px] font-bold">E2</span> Premios de equipo
+            </span>
+          </div>
+        </div>
+      );
+    }
+
+    // COMPONENTE PRINCIPAL
+    function App() {
+      const [muted, setMuted] = useState(false);
+      const [teams, setTeams] = useState([
+        { id: 0, name: "Equipo 1", money: 0, safeMoney: 0, lifelines: { call: true, fifty: true, public: true, host: true } },
+        { id: 1, name: "Equipo 2", money: 0, safeMoney: 0, lifelines: { call: true, fifty: true, public: true, host: true } }
+      ]);
+      const [gameState, setGameState] = useState("SETUP"); // SETUP | THEME_REVEAL | QUESTION | ANSWERED | FINISHED
+      
+      // NUEVA ESTRUCTURA DE RONDAS:
+      // Cada ronda tiene 2 turnos (Turno 0 = Equipo 1, Turno 1 = Equipo 2).
+      const [currentRound, setCurrentRound] = useState(1); // 1 a 15
+      const [roundTeamStep, setRoundTeamStep] = useState(0); // 0 (Equipo 1) o 1 (Equipo 2)
+      
+      const activeTeamIndex = roundTeamStep; // 0 o 1
+      const [currentQuestion, setCurrentQuestion] = useState(null);
+      const [usedQuestionIds, setUsedQuestionIds] = useState([]);
+      const [selectedOption, setSelectedOption] = useState(null);
+      const [isAnswerConfirmed, setIsAnswerConfirmed] = useState(false);
+      const [eliminatedOptions, setEliminatedOptions] = useState([]);
+      const [timeLeft, setTimeLeft] = useState(30);
+      const [isTimerRunning, setIsTimerRunning] = useState(false);
+
+      // Reproductor de audio de 5 segundos
+      const audioPlayerRef = useRef(null);
+      const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+      const [audioSecondsLeft, setAudioSecondsLeft] = useState(5);
+      const audioCountdownRef = useRef(null);
+
+      // Modales y Control
+      const [activeModal, setActiveModal] = useState(null); // 'CALL' | 'PUBLIC' | 'HOST' | 'REBUY' | 'QR' | 'LADDER'
+      const [lifelineCountdown, setLifelineCountdown] = useState(30);
+      const [rebuyType, setRebuyType] = useState(null);
+      const [showHostPanel, setShowHostPanel] = useState(false);
+      const [copied, setCopied] = useState(false);
+      const [localIp, setLocalIp] = useState("192.168.1.70");
+
+      useEffect(() => {
+        if (window.location.hostname && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+          setLocalIp(window.location.hostname);
+        }
+      }, []);
+
+      const publicUrl = "https://diverse-typical-toddler-difference.trycloudflare.com";
+      const shareUrl = (typeof window !== "undefined" && window.location.origin && !window.location.origin.includes("localhost"))
+        ? window.location.origin
+        : publicUrl;
+
+      const unlockAudio = () => {
+        sound.init();
+      };
+
+      const toggleSound = () => {
+        const next = !muted;
+        setMuted(next);
+        sound.setMuted(next);
+      };
+
+      // Reproducción del fragmento de 5 segundos
+      const play5SecondsAudio = () => {
+        if (!currentQuestion?.audioSrc) return;
+        if (isPlayingAudio) {
+          if (audioPlayerRef.current) {
+            audioPlayerRef.current.pause();
+          }
+          clearInterval(audioCountdownRef.current);
+          setIsPlayingAudio(false);
+          setAudioSecondsLeft(5);
+          sound.startSuspenseDrone();
+          return;
+        }
+
+        sound.stopSuspenseDrone();
+        if (!audioPlayerRef.current) {
+          audioPlayerRef.current = new Audio(currentQuestion.audioSrc);
+        } else {
+          audioPlayerRef.current.src = currentQuestion.audioSrc;
+        }
+
+        audioPlayerRef.current.currentTime = currentQuestion.audioStart || 0;
+        audioPlayerRef.current.play().catch(e => console.warn("Audio error:", e));
+        setIsPlayingAudio(true);
+        setAudioSecondsLeft(5);
+
+        let left = 5;
+        clearInterval(audioCountdownRef.current);
+        audioCountdownRef.current = setInterval(() => {
+          left -= 1;
+          setAudioSecondsLeft(left);
+          if (left <= 0) {
+            clearInterval(audioCountdownRef.current);
+            if (audioPlayerRef.current) {
+              audioPlayerRef.current.pause();
+            }
+            setIsPlayingAudio(false);
+            setAudioSecondsLeft(5);
+            if (gameState === "QUESTION" && !isAnswerConfirmed) {
+              sound.startSuspenseDrone();
+            }
+          }
+        }, 1000);
+      };
+
+      useEffect(() => {
+        if (audioPlayerRef.current) {
+          audioPlayerRef.current.pause();
+        }
+        clearInterval(audioCountdownRef.current);
+        setIsPlayingAudio(false);
+        setAudioSecondsLeft(5);
+      }, [currentQuestion]);
+
+      // Seleccionar pregunta asegurando que no se repita en la misma partida
+      // y garantizando que en Ronda 2 (Turno de Equipo 1) salga la de música
+      const pickQuestionForRoundAndTeam = (level, teamStep) => {
+        const candidates = QUESTIONS_DB.filter(q => q.level === level);
+        let chosen = null;
+
+        if (level === 2 && teamStep === 0) {
+          // Ronda 2, turno de Equipo 1: La pregunta musical de Titanium
+          chosen = candidates.find(q => q.audioSrc) || candidates[0];
+        } else {
+          // Filtrar preguntas no usadas aún
+          const available = candidates.filter(q => !usedQuestionIds.includes(q.id) && !q.audioSrc);
+          chosen = available[Math.floor(Math.random() * available.length)] || candidates[0];
+        }
+
+        setUsedQuestionIds(prev => [...prev, chosen.id]);
+        setCurrentQuestion(chosen);
+        setSelectedOption(null);
+        setIsAnswerConfirmed(false);
+        setEliminatedOptions([]);
+        setTimeLeft(30);
+        setIsTimerRunning(false);
+      };
+
+      const handleStartGame = () => {
+        unlockAudio();
+        setCurrentRound(1);
+        setRoundTeamStep(0);
+        setUsedQuestionIds([]);
+        pickQuestionForRoundAndTeam(1, 0);
+        setGameState("THEME_REVEAL");
+        sound.playThemeReveal();
+      };
+
+      const handleStartQuestionAfterTheme = () => {
+        unlockAudio();
+        setGameState("QUESTION");
+        setTimeLeft(30);
+        setIsTimerRunning(true);
+        sound.startSuspenseDrone();
+      };
+
+      // Temporizador de 30s
+      useEffect(() => {
+        let timer = null;
+        if (gameState === "QUESTION" && isTimerRunning && timeLeft > 0) {
+          timer = setInterval(() => {
+            setTimeLeft(prev => {
+              if (prev <= 1) {
+                clearInterval(timer);
+                handleTimeOut();
+                return 0;
+              }
+              sound.playTick(prev <= 10);
+              return prev - 1;
+            });
+          }, 1000);
+        }
+        return () => clearInterval(timer);
+      }, [gameState, isTimerRunning, timeLeft]);
+
+      const handleTimeOut = () => {
+        sound.stopSuspenseDrone();
+        sound.playWrong();
+        setIsTimerRunning(false);
+        setIsAnswerConfirmed(true);
+        setGameState("ANSWERED");
+
+        const currentTeam = teams[activeTeamIndex];
+        setTeams(prev => prev.map((t, idx) => idx === activeTeamIndex ? { ...t, money: t.safeMoney } : t));
+      };
+
+      const handleSelectOption = (idx) => {
+        if (gameState !== "QUESTION" || isAnswerConfirmed || eliminatedOptions.includes(idx)) return;
+        setSelectedOption(idx);
+        sound.playSelect();
+      };
+
+      const handleConfirmAnswer = () => {
+        if (selectedOption === null || gameState !== "QUESTION") return;
+        setIsAnswerConfirmed(true);
+        setIsTimerRunning(false);
+
+        const isCorrect = selectedOption === currentQuestion.correct;
+        const prizeInfo = PRIZE_LADDER.find(p => p.level === currentRound);
+        const roundPrize = prizeInfo ? prizeInfo.prize : 100;
+        const isSafe = prizeInfo ? prizeInfo.isSafe : false;
+
+        setTimeout(() => {
+          if (isCorrect) {
+            sound.playCorrect();
+            setTeams(prev => prev.map((team, idx) => {
+              if (idx === activeTeamIndex) {
+                return {
+                  ...team,
+                  money: roundPrize,
+                  safeMoney: isSafe ? roundPrize : team.safeMoney,
+                };
+              }
+              return team;
+            }));
+          } else {
+            sound.playWrong();
+            setTeams(prev => prev.map((team, idx) => {
+              if (idx === activeTeamIndex) {
+                return {
+                  ...team,
+                  money: team.safeMoney,
+                };
+              }
+              return team;
+            }));
+          }
+          setGameState("ANSWERED");
+        }, 1100);
+      };
+
+      // AVANCE: Ronda 1 responde Equipo 1 -> Ronda 1 responde Equipo 2 -> Avanza a Ronda 2
+      const handleNextTurnOrRound = () => {
+        if (roundTeamStep === 0) {
+          // Mismo número de ronda, turno de Equipo 2
+          setRoundTeamStep(1);
+          pickQuestionForRoundAndTeam(currentRound, 1);
+          setGameState("THEME_REVEAL");
+          sound.playThemeReveal();
+        } else {
+          // Ambos equipos ya respondieron en esta ronda
+          if (currentRound >= 15) {
+            setGameState("FINISHED");
+            sound.playCorrect();
+            return;
+          }
+          // Avanzar a la siguiente ronda con el Equipo 1
+          const nextRound = currentRound + 1;
+          setCurrentRound(nextRound);
+          setRoundTeamStep(0);
+          pickQuestionForRoundAndTeam(nextRound, 0);
+          setGameState("THEME_REVEAL");
+          sound.playThemeReveal();
+        }
+      };
+
+      const handleUseLifeline = (type) => {
+        const team = teams[activeTeamIndex];
+        if (!team.lifelines[type]) {
+          setRebuyType(type);
+          setActiveModal("REBUY");
+          return;
+        }
+
+        setTeams(prev => prev.map((t, idx) => idx === activeTeamIndex ? {
+          ...t,
+          lifelines: { ...t.lifelines, [type]: false }
+        } : t));
+
+        sound.playLifeline();
+
+        if (type === "fifty") {
+          const wrong = [0, 1, 2, 3].filter(i => i !== currentQuestion.correct);
+          const shuffled = wrong.sort(() => 0.5 - Math.random());
+          setEliminatedOptions(shuffled.slice(0, 2));
+        } else if (type === "call") {
+          setIsTimerRunning(false);
+          setLifelineCountdown(30);
+          setActiveModal("CALL");
+        } else if (type === "public") {
+          setIsTimerRunning(false);
+          setLifelineCountdown(30);
+          setActiveModal("PUBLIC");
+        } else if (type === "host") {
+          setIsTimerRunning(false);
+          setLifelineCountdown(45);
+          setActiveModal("HOST");
+        }
+      };
+
+      const handleConfirmRebuy = () => {
+        const team = teams[activeTeamIndex];
+        const cost = Math.floor(team.money * 0.5);
+
+        if (team.money < 100) {
+          alert("Dinero insuficiente para recomprar (mínimo 100 €).");
+          setActiveModal(null);
+          return;
+        }
+
+        setTeams(prev => prev.map((t, idx) => idx === activeTeamIndex ? {
+          ...t,
+          money: t.money - cost,
+          lifelines: { ...t.lifelines, [rebuyType]: true }
+        } : t));
+
+        sound.playLifeline();
+        setActiveModal(null);
+      };
+
+      useEffect(() => {
+        let timer = null;
+        if (activeModal && (activeModal === "CALL" || activeModal === "PUBLIC" || activeModal === "HOST")) {
+          timer = setInterval(() => {
+            setLifelineCountdown(prev => {
+              if (prev <= 1) {
+                clearInterval(timer);
+                return 0;
+              }
+              return prev - 1;
+            });
+          }, 1000);
+        }
+        return () => clearInterval(timer);
+      }, [activeModal]);
+
+      const closeLifelineModal = () => {
+        setActiveModal(null);
+        if (gameState === "QUESTION" && !isAnswerConfirmed) {
+          setIsTimerRunning(true);
+        }
+      };
+
+      const copyShareLink = () => {
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(shareUrl);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        }
+      };
+
+      const activeTeam = teams[activeTeamIndex];
+      const rebuyCost = Math.floor(activeTeam.money * 0.5);
+      const currentPrizeObj = PRIZE_LADDER.find(p => p.level === currentRound) || PRIZE_LADDER[0];
+
+      return (
+        <div className="min-h-full flex flex-col justify-between">
+          {/* HEADER DEL PLATO TV */}
+          <header className="border-b border-slate-700/60 bg-slate-950/70 backdrop-blur-md px-4 py-2.5 sticky top-0 z-40">
+            <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
+              {/* Logo Clásico */}
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full border-2 border-amber-400/80 bg-blue-950 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                  <span className="text-amber-400 font-black text-xs">QM</span>
+                </div>
+                <div>
+                  <h1 className="text-xs sm:text-sm font-black tracking-widest uppercase text-slate-100">
+                    ¿Quién Quiere Ser Millonario?
+                  </h1>
+                  <div className="text-xs text-slate-300 font-semibold">
+                    Ronda {currentRound} de 15 • <span className="text-amber-400 font-bold">{currentPrizeObj.label}</span>
+                    <span className="ml-2 text-[10px] text-slate-400 uppercase tracking-wider">
+                      (Turno {roundTeamStep + 1}/2 de la ronda)
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Marcador de los 2 Equipos */}
+              <div className="flex items-center gap-2 sm:gap-3">
+                {teams.map((t, idx) => {
+                  const isCurrent = idx === activeTeamIndex && gameState !== "SETUP" && gameState !== "FINISHED";
+                  return (
+                    <div
+                      key={t.id}
+                      className={`px-3 py-1.5 rounded-lg border transition-all text-left ${
+                        isCurrent
+                          ? "bg-blue-950/90 border-amber-400 ring-2 ring-amber-400/40 shadow-lg shadow-blue-500/20"
+                          : "bg-slate-900/60 border-slate-800 text-slate-400"
+                      }`}
+                    >
+                      <div className="text-[11px] font-bold text-slate-300 truncate max-w-[85px] sm:max-w-none">
+                        {t.name}
+                      </div>
+                      <div className={`text-xs sm:text-sm font-black ${isCurrent ? "text-amber-300" : "text-slate-300"}`}>
+                        {t.money.toLocaleString("es-ES")} €
+                      </div>
+                      <div className="text-[9px] text-slate-400">
+                        Seguro: {t.safeMoney.toLocaleString("es-ES")} €
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Botones de Utilidad */}
+              <div className="flex items-center gap-1.5 text-xs">
+                <button
+                  onClick={() => setActiveModal("LADDER")}
+                  className="px-2.5 py-1.5 rounded bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/40 text-amber-300 font-bold"
+                  title="Ver Escala de Premios"
+                >
+                  Premios
+                </button>
+                <button
+                  onClick={toggleSound}
+                  className="px-2.5 py-1.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-bold"
+                >
+                  {muted ? "Sonido: Off" : "Sonido: On"}
+                </button>
+                <button
+                  onClick={() => setActiveModal("QR")}
+                  className="px-2.5 py-1.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-amber-300 font-bold hidden sm:inline-block"
+                >
+                  Móvil
+                </button>
+                <button
+                  onClick={() => setShowHostPanel(!showHostPanel)}
+                  className={`px-2.5 py-1.5 rounded border font-bold transition ${
+                    showHostPanel ? "bg-amber-400 text-slate-950 border-amber-400" : "bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-200"
+                  }`}
+                >
+                  Presentador
+                </button>
+              </div>
+            </div>
+          </header>
+
+          {/* PANEL SECRETO DEL PRESENTADOR */}
+          {showHostPanel && (
+            <div className="bg-slate-950/95 border-b border-amber-500/40 p-3 text-xs text-slate-200 z-30">
+              <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="font-black uppercase tracking-wider text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/30">
+                    Host
+                  </span>
+                  {currentQuestion && (
+                    <span>
+                      Respuesta correcta: <strong className="text-emerald-400 bg-slate-900 px-2 py-0.5 rounded border border-emerald-500/40">
+                        {["A", "B", "C", "D"][currentQuestion.correct]}: {currentQuestion.options[currentQuestion.correct]}
+                      </strong>
+                    </span>
+                  )}
+                </div>
+
+                {currentQuestion?.hint && (
+                  <span className="text-slate-300 italic max-w-md truncate">
+                    Pista: &ldquo;{currentQuestion.hint}&rdquo;
+                  </span>
+                )}
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setIsTimerRunning(!isTimerRunning)}
+                    className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold"
+                  >
+                    {isTimerRunning ? "Pausar" : "Reanudar"}
+                  </button>
+                  <button
+                    onClick={() => setTimeLeft(prev => prev + 15)}
+                    className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 font-bold"
+                  >
+                    +15s
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* CONTENEDOR PRINCIPAL: JUEGO + PANEL LATERAL DE PREMIOS */}
+          <div className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-5 flex flex-col lg:flex-row gap-5 items-start justify-center">
+            {/* ÁREA CENTRAL DEL JUEGO */}
+            <main className="flex-1 w-full min-w-0 flex flex-col justify-center">
+              {/* Barra informativa de premio en móviles */}
+              {gameState !== "SETUP" && gameState !== "FINISHED" && (
+                <div className="lg:hidden mb-4">
+                  <button
+                    onClick={() => setActiveModal("LADDER")}
+                    className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-950/90 border border-slate-700/80 hover:border-amber-400 text-xs transition shadow-lg"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+                      <span className="text-slate-400">Ronda {currentRound}/15:</span>
+                      <span className="font-black text-amber-300 text-sm">{currentPrizeObj.label}</span>
+                    </div>
+                    <span className="text-[11px] text-amber-400 font-bold flex items-center gap-1">
+                      Ver escala lateral ❯
+                    </span>
+                  </button>
+                </div>
+              )}
+            {/* 1. SETUP / CONFIGURACIÓN INICIAL */}
+            {gameState === "SETUP" && (
+              <div className="bg-slate-950/90 border-2 border-slate-700 rounded-2xl p-6 sm:p-10 max-w-lg mx-auto w-full text-center shadow-2xl">
+                <div className="w-16 h-16 rounded-full border-2 border-amber-400 bg-blue-950 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/30">
+                  <span className="text-amber-400 font-black text-xl">QM</span>
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-black tracking-wider uppercase text-slate-100">
+                  ¿Quién Quiere Ser Millonario?
+                </h2>
+                <p className="text-slate-400 text-xs sm:text-sm mt-1 mb-6">
+                  Edición 2 Equipos • 15 Rondas (En cada ronda responden ambos equipos)
+                </p>
+
+                <div className="space-y-3 text-left mb-6">
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                      Nombre Equipo 1
+                    </label>
+                    <input
+                      type="text"
+                      value={teams[0].name}
+                      onChange={(e) => setTeams(prev => [{ ...prev[0], name: e.target.value || "Equipo 1" }, prev[1]])}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                      Nombre Equipo 2
+                    </label>
+                    <input
+                      type="text"
+                      value={teams[1].name}
+                      onChange={(e) => setTeams(prev => [prev[0], { ...prev[1], name: e.target.value || "Equipo 2" }])}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 text-xs text-slate-300 mb-6 space-y-1.5 text-left">
+                  <div>• <strong>Dinámica de rondas:</strong> Cada ronda incluye una pregunta para el Equipo 1 y otra para el Equipo 2.</div>
+                  <div>• <strong>Temática previa:</strong> Se muestra antes de cada pregunta para que el equipo elija a su representante.</div>
+                  <div>• <strong>Tiempo:</strong> 30 segundos por pregunta.</div>
+                  <div>• <strong>Comodines:</strong> 4 disponibles por equipo con opción de recompra al 50%.</div>
+                </div>
+
+                <button
+                  onClick={handleStartGame}
+                  className="w-full py-3.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm uppercase tracking-wider transition shadow-lg shadow-amber-500/20"
+                >
+                  Comenzar Concurso
+                </button>
+              </div>
+            )}
+
+            {/* 2. ANUNCIO DE LA TEMÁTICA PREVIO A LA PREGUNTA */}
+            {gameState === "THEME_REVEAL" && currentQuestion && (
+              <div className="bg-slate-950/90 border-2 border-slate-700 rounded-2xl p-6 sm:p-10 max-w-xl mx-auto w-full text-center shadow-2xl relative overflow-hidden">
+                <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">
+                  Ronda {currentRound} de 15 • {currentPrizeObj.label}
+                </div>
+                <div className="text-xs font-semibold text-amber-400/90 uppercase tracking-wider mb-4">
+                  Turno {roundTeamStep + 1} de 2 en esta ronda
+                </div>
+
+                <div className="text-xs uppercase tracking-wider text-slate-400">
+                  Es el turno de responder de:
+                </div>
+                <div className="text-2xl sm:text-3xl font-black text-slate-100 mt-0.5 mb-6">
+                  {activeTeam.name}
+                </div>
+
+                {/* CAJA DE LA TEMÁTICA ESTILO MILLONARIO */}
+                <div className="my-6 py-6 px-4 rounded-xl bg-blue-950/60 border-2 border-amber-400/80 shadow-lg shadow-blue-500/20">
+                  <div className="text-xs uppercase tracking-widest text-amber-300 font-bold mb-1">
+                    Temática
+                  </div>
+                  <div className="text-2xl sm:text-3xl font-black tracking-wide text-white">
+                    {currentQuestion.category}
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-300 mb-6 max-w-md mx-auto">
+                  <strong>{activeTeam.name}</strong>, elegid a vuestro representante para esta temática. Al pulsar el botón, se descubrirá la pregunta y empezarán los 30 segundos.
+                </p>
+
+                <button
+                  onClick={handleStartQuestionAfterTheme}
+                  className="w-full py-3.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm uppercase tracking-wider transition shadow-lg shadow-amber-500/20"
+                >
+                  Representante Listo • Descubrir Pregunta
+                </button>
+              </div>
+            )}
+
+            {/* 3 Y 4. PREGUNTA ACTIVA / RESULTADO */}
+            {(gameState === "QUESTION" || gameState === "ANSWERED") && currentQuestion && (
+              <div className="space-y-6">
+                {/* BARRA SUPERIOR: CRONÓMETRO Y LOS 4 COMODINES CIRCULARES */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  {/* Cronómetro Clásico */}
+                  <div className="flex items-center gap-3">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-lg border-2 ${
+                      timeLeft <= 10
+                        ? "border-red-500 text-red-400 bg-red-950/40 animate-pulse"
+                        : "border-amber-400 text-slate-100 bg-blue-950 shadow-lg shadow-blue-500/20"
+                    }`}>
+                      {timeLeft}
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-slate-200">
+                        {activeTeam.name}
+                      </div>
+                      <div className="text-[11px] text-slate-400">
+                        {isTimerRunning ? "30 segundos activos" : "Reloj detenido"}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* COMODINES CIRCULARES MÍTICOS */}
+                  <div className="flex items-center gap-3">
+                    {/* 50:50 */}
+                    <button
+                      onClick={() => handleUseLifeline("fifty")}
+                      disabled={gameState !== "QUESTION" || isAnswerConfirmed}
+                      className={`relative w-12 h-12 rounded-full border-2 font-black text-xs transition-all flex items-center justify-center ${
+                        activeTeam.lifelines.fifty
+                          ? "border-slate-300 bg-blue-950 text-slate-100 hover:border-amber-400 hover:scale-105 shadow-md shadow-blue-500/20"
+                          : "border-slate-800 bg-slate-950 text-slate-600 cursor-pointer"
+                      }`}
+                      title={activeTeam.lifelines.fifty ? "Comodín 50:50" : `Gastado. Recomprar al 50% (${rebuyCost} €)`}
+                    >
+                      <span>50:50</span>
+                      {!activeTeam.lifelines.fifty && (
+                        <span className="absolute -bottom-1 text-[8px] bg-amber-500 text-slate-950 font-black px-1 rounded-full">
+                          50%
+                        </span>
+                      )}
+                    </button>
+
+                    {/* LLAMADA */}
+                    <button
+                      onClick={() => handleUseLifeline("call")}
+                      disabled={gameState !== "QUESTION" || isAnswerConfirmed}
+                      className={`relative w-12 h-12 rounded-full border-2 font-black text-xs transition-all flex items-center justify-center ${
+                        activeTeam.lifelines.call
+                          ? "border-slate-300 bg-blue-950 text-slate-100 hover:border-amber-400 hover:scale-105 shadow-md shadow-blue-500/20"
+                          : "border-slate-800 bg-slate-950 text-slate-600 cursor-pointer"
+                      }`}
+                      title={activeTeam.lifelines.call ? "Comodín de la llamada" : `Gastado. Recomprar al 50% (${rebuyCost} €)`}
+                    >
+                      <span className="text-[11px]">Llamada</span>
+                      {!activeTeam.lifelines.call && (
+                        <span className="absolute -bottom-1 text-[8px] bg-amber-500 text-slate-950 font-black px-1 rounded-full">
+                          50%
+                        </span>
+                      )}
+                    </button>
+
+                    {/* PÚBLICO */}
+                    <button
+                      onClick={() => handleUseLifeline("public")}
+                      disabled={gameState !== "QUESTION" || isAnswerConfirmed}
+                      className={`relative w-12 h-12 rounded-full border-2 font-black text-xs transition-all flex items-center justify-center ${
+                        activeTeam.lifelines.public
+                          ? "border-slate-300 bg-blue-950 text-slate-100 hover:border-amber-400 hover:scale-105 shadow-md shadow-blue-500/20"
+                          : "border-slate-800 bg-slate-950 text-slate-600 cursor-pointer"
+                      }`}
+                      title={activeTeam.lifelines.public ? "Comodín del público" : `Gastado. Recomprar al 50% (${rebuyCost} €)`}
+                    >
+                      <span className="text-[11px]">Público</span>
+                      {!activeTeam.lifelines.public && (
+                        <span className="absolute -bottom-1 text-[8px] bg-amber-500 text-slate-950 font-black px-1 rounded-full">
+                          50%
+                        </span>
+                      )}
+                    </button>
+
+                    {/* PRESENTADOR */}
+                    <button
+                      onClick={() => handleUseLifeline("host")}
+                      disabled={gameState !== "QUESTION" || isAnswerConfirmed}
+                      className={`relative w-12 h-12 rounded-full border-2 font-black text-xs transition-all flex items-center justify-center ${
+                        activeTeam.lifelines.host
+                          ? "border-slate-300 bg-blue-950 text-slate-100 hover:border-amber-400 hover:scale-105 shadow-md shadow-blue-500/20"
+                          : "border-slate-800 bg-slate-950 text-slate-600 cursor-pointer"
+                      }`}
+                      title={activeTeam.lifelines.host ? "Comodín del presentador" : `Gastado. Recomprar al 50% (${rebuyCost} €)`}
+                    >
+                      <span className="text-[10px]">Host</span>
+                      {!activeTeam.lifelines.host && (
+                        <span className="absolute -bottom-1 text-[8px] bg-amber-500 text-slate-950 font-black px-1 rounded-full">
+                          50%
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* CAJA DE LA PREGUNTA (ESTILO CLÁSICO CON LÍNEAS HORIZONTALES) */}
+                <div className="relative flex items-center my-4">
+                  <div className="hidden sm:block flex-1 connector-line"></div>
+                  <div className="relative mx-auto w-full sm:w-[92%] lozenge-border">
+                    <div className="lozenge-shape bg-gradient-to-b from-blue-950 to-slate-950 py-5 px-8 text-center">
+                      <div className="text-[11px] font-bold uppercase tracking-widest text-amber-400 mb-1">
+                        {currentQuestion.category}
+                      </div>
+                      <h3 className="text-lg sm:text-2xl font-bold text-white leading-relaxed">
+                        {currentQuestion.question}
+                      </h3>
+
+                      {/* BOTÓN DE AUDIO DE 5 SEGUNDOS (PREGUNTA MUSICAL) */}
+                      {currentQuestion.audioSrc && (
+                        <div className="mt-4 pt-3 border-t border-slate-700/60 flex flex-col items-center">
+                          <button
+                            onClick={play5SecondsAudio}
+                            className={`px-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition ${
+                              isPlayingAudio
+                                ? "bg-amber-400 text-slate-950 font-black animate-pulse"
+                                : "bg-blue-900/80 hover:bg-blue-800 border border-slate-400 text-slate-100"
+                            }`}
+                          >
+                            {isPlayingAudio ? `Reproduciendo fragmento (${audioSecondsLeft}s)` : "Reproducir fragmento (5 segundos)"}
+                          </button>
+                          <span className="text-[11px] text-slate-400 mt-1">
+                            Podéis escucharlo de nuevo dentro del tiempo de la pregunta.
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="hidden sm:block flex-1 connector-line"></div>
+                </div>
+
+                {/* LAS 4 OPCIONES EN LOZENGE CLÁSICO */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  {currentQuestion.options.map((opt, idx) => {
+                    const letter = ["A", "B", "C", "D"][idx];
+                    const isSelected = selectedOption === idx;
+                    const isEliminated = eliminatedOptions.includes(idx);
+                    const isCorrect = idx === currentQuestion.correct;
+
+                    let fillClass = "bg-gradient-to-b from-blue-950/90 to-slate-950 text-slate-100";
+                    let borderClass = "linear-gradient(180deg, #94a3b8 0%, #334155 50%, #94a3b8 100%)";
+
+                    if (isEliminated) {
+                      fillClass = "bg-slate-950/50 text-slate-700 line-through";
+                      borderClass = "#1e293b";
+                    } else if (gameState === "ANSWERED") {
+                      if (isCorrect) {
+                        fillClass = "bg-gradient-to-b from-emerald-600 to-green-700 text-white font-black shadow-lg shadow-green-500/40";
+                        borderClass = "linear-gradient(180deg, #86efac 0%, #22c55e 100%)";
+                      } else if (isSelected && !isCorrect) {
+                        fillClass = "bg-gradient-to-b from-red-600 to-red-800 text-white";
+                        borderClass = "linear-gradient(180deg, #fca5a5 0%, #ef4444 100%)";
+                      } else {
+                        fillClass = "bg-slate-950/60 text-slate-600";
+                        borderClass = "#334155";
+                      }
+                    } else if (isSelected) {
+                      fillClass = "bg-gradient-to-b from-amber-500 to-yellow-600 text-slate-950 font-black shadow-lg shadow-amber-500/30";
+                      borderClass = "linear-gradient(180deg, #fef08a 0%, #eab308 100%)";
+                    }
+
+                    return (
+                      <div key={idx} className="relative flex items-center">
+                        <div className="hidden sm:block w-3 connector-line"></div>
+                        <button
+                          disabled={gameState !== "QUESTION" || isEliminated || isAnswerConfirmed}
+                          onClick={() => handleSelectOption(idx)}
+                          style={{ background: borderClass }}
+                          className={`w-full p-[2px] transition-all hover:scale-[1.01] ${
+                            isEliminated ? "pointer-events-none opacity-20" : "cursor-pointer"
+                          }`}
+                        >
+                          <div className={`lozenge-shape py-3.5 px-6 flex items-center gap-3 text-left ${fillClass}`}>
+                            <span className={`font-black text-sm tracking-wider ${isSelected && gameState === "QUESTION" ? "text-slate-950" : "text-amber-400"}`}>
+                              {letter}:
+                            </span>
+                            <span className="font-semibold text-sm sm:text-base flex-1">
+                              {opt}
+                            </span>
+                            {gameState === "ANSWERED" && isCorrect && (
+                              <span className="text-xs font-black uppercase text-white bg-green-900/60 px-2 py-0.5 rounded">
+                                Correcta
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                        <div className="hidden sm:block w-3 connector-line"></div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* BOTÓN CONFIRMAR O SIGUIENTE */}
+                <div className="pt-2">
+                  {gameState === "QUESTION" && (
+                    <button
+                      disabled={selectedOption === null || isAnswerConfirmed}
+                      onClick={handleConfirmAnswer}
+                      className={`w-full py-3.5 rounded-lg font-black text-sm uppercase tracking-wider transition ${
+                        selectedOption !== null && !isAnswerConfirmed
+                          ? "bg-amber-400 hover:bg-amber-300 text-slate-950 cursor-pointer shadow-lg shadow-amber-500/20"
+                          : "bg-slate-900 text-slate-600 border border-slate-800 cursor-not-allowed"
+                      }`}
+                    >
+                      {selectedOption !== null ? "Confirmar Respuesta Definitiva" : "Elige una opción para responder"}
+                    </button>
+                  )}
+
+                  {gameState === "ANSWERED" && (
+                    <div className="bg-slate-950 border border-slate-700 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xl">
+                      <div className="text-sm">
+                        <span className="text-slate-400 text-xs uppercase font-bold block">
+                          Resultado para {activeTeam.name}:
+                        </span>
+                        {selectedOption === currentQuestion.correct ? (
+                          <span className="text-emerald-400 font-black text-base">
+                            ¡Respuesta Correcta! ({currentPrizeObj.label})
+                          </span>
+                        ) : (
+                          <span className="text-red-400 font-bold text-base">
+                            Respuesta Incorrecta (Seguro alcanzado: {activeTeam.safeMoney.toLocaleString("es-ES")} €)
+                          </span>
+                        )}
+                      </div>
+
+                      <button
+                        onClick={handleNextTurnOrRound}
+                        className="w-full sm:w-auto px-6 py-3 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs uppercase tracking-wider transition shadow-lg"
+                      >
+                        {roundTeamStep === 0
+                          ? `Continuar: Turno de ${teams[1].name} (Ronda ${currentRound})`
+                          : (currentRound >= 15 ? "Ver Podio Final" : `Siguiente Ronda (${currentRound + 1} de 15)`)}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 5. FIN DE PARTIDA */}
+            {gameState === "FINISHED" && (
+              <div className="bg-slate-950/95 border-2 border-amber-400 rounded-2xl p-6 sm:p-10 max-w-lg mx-auto w-full text-center shadow-2xl">
+                <h2 className="text-2xl sm:text-3xl font-black text-amber-400 tracking-wider uppercase">
+                  Concurso Finalizado
+                </h2>
+                <p className="text-slate-400 text-xs sm:text-sm mt-1 mb-6">
+                  Se han completado las 15 rondas para ambos equipos.
+                </p>
+
+                <div className="space-y-3 mb-6 text-left">
+                  {teams.map((t, i) => {
+                    const other = teams[i === 0 ? 1 : 0];
+                    const isWinner = t.money >= other.money && t.money > 0;
+                    return (
+                      <div
+                        key={t.id}
+                        className={`p-4 rounded-xl border ${
+                          isWinner ? "bg-blue-950/80 border-amber-400" : "bg-slate-900 border-slate-800"
+                        }`}
+                      >
+                        <div className="flex justify-between items-center text-xs text-slate-400 mb-1">
+                          <span className="font-bold text-slate-200">{t.name}</span>
+                          {isWinner && <span className="text-amber-400 font-black uppercase">Ganador</span>}
+                        </div>
+                        <div className="text-2xl font-black text-white">
+                          {t.money.toLocaleString("es-ES")} €
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <button
+                  onClick={() => setGameState("SETUP")}
+                  className="w-full py-3.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-sm uppercase tracking-wider transition"
+                >
+                  Jugar Nueva Partida
+                </button>
+              </div>
+            )}
+          </main>
+
+            {/* PANEL LATERAL DE LA ESCALA DE PREMIOS (VISIBLE SIEMPRE EN ESCRITORIO Y TABLET) */}
+            <aside className="hidden lg:block w-72 xl:w-80 shrink-0 sticky top-16">
+              <PrizeLadderCard
+                currentRound={currentRound}
+                roundTeamStep={roundTeamStep}
+                teams={teams}
+                gameState={gameState}
+                currentPrizeObj={currentPrizeObj}
+                isModal={false}
+              />
+            </aside>
+          </div>
+
+          {/* MODAL COMODÍN LLAMADA */}
+          {activeModal === "CALL" && (
+            <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4">
+              <div className="bg-slate-950 border-2 border-slate-600 rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl">
+                <h3 className="text-base font-black text-slate-100 uppercase tracking-wider">Comodín de la Llamada</h3>
+                <p className="text-slate-400 text-xs mt-1 mb-4">Llamad a un compañero del grupo por teléfono o altavoz.</p>
+                <div className="text-4xl font-mono font-bold text-amber-400 mb-6">
+                  00:{lifelineCountdown.toString().padStart(2, "0")}
+                </div>
+                <button
+                  onClick={closeLifelineModal}
+                  className="w-full py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs font-bold uppercase tracking-wider"
+                >
+                  Finalizar Llamada
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL COMODÍN PÚBLICO */}
+          {activeModal === "PUBLIC" && (
+            <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4">
+              <div className="bg-slate-950 border-2 border-slate-600 rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl">
+                <h3 className="text-base font-black text-slate-100 uppercase tracking-wider">Comodín del Público</h3>
+                <p className="text-slate-400 text-xs mt-1 mb-4">El representante puede girarse y consultar con todo su equipo.</p>
+                <div className="text-4xl font-mono font-bold text-amber-400 mb-6">
+                  00:{lifelineCountdown.toString().padStart(2, "0")}
+                </div>
+                <button
+                  onClick={closeLifelineModal}
+                  className="w-full py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs font-bold uppercase tracking-wider"
+                >
+                  Finalizar Consulta
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL COMODÍN PRESENTADOR */}
+          {activeModal === "HOST" && (
+            <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4">
+              <div className="bg-slate-950 border-2 border-amber-400 rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl">
+                <h3 className="text-base font-black text-slate-100 uppercase tracking-wider">Consulta al Presentador</h3>
+                <p className="text-slate-400 text-xs mt-1 mb-3">El concursante puede pedir un consejo directo al anfitrión.</p>
+                {currentQuestion?.hint && (
+                  <div className="bg-blue-950/70 border border-slate-700 p-2.5 rounded-lg text-xs text-slate-200 italic mb-4">
+                    Pista: &ldquo;{currentQuestion.hint}&rdquo;
+                  </div>
+                )}
+                <div className="text-3xl font-mono font-bold text-amber-400 mb-5">
+                  00:{lifelineCountdown.toString().padStart(2, "0")}
+                </div>
+                <button
+                  onClick={closeLifelineModal}
+                  className="w-full py-2.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black uppercase tracking-wider"
+                >
+                  Listo • Volver a Responder
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL RECOMPRA (50% DEL DINERO ACUMULADO) */}
+          {activeModal === "REBUY" && (
+            <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4">
+              <div className="bg-slate-950 border-2 border-amber-400 rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl">
+                <h3 className="text-base font-black text-slate-100 uppercase tracking-wider">Recomprar Comodín</h3>
+                <p className="text-slate-400 text-xs mt-1 mb-4">
+                  Cuesta exactamente el 50% de vuestro dinero acumulado actual.
+                </p>
+
+                <div className="bg-slate-900 border border-slate-800 rounded-lg p-3 text-xs mb-4 text-left space-y-1">
+                  <div className="flex justify-between text-slate-400">
+                    <span>Dinero actual:</span>
+                    <span className="text-slate-100 font-bold">{activeTeam.money.toLocaleString("es-ES")} €</span>
+                  </div>
+                  <div className="flex justify-between text-amber-400 font-bold">
+                    <span>Coste recompra (50%):</span>
+                    <span>-{rebuyCost.toLocaleString("es-ES")} €</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-slate-200 border-t border-slate-800 pt-1">
+                    <span>Saldo resultante:</span>
+                    <span>{(activeTeam.money - rebuyCost).toLocaleString("es-ES")} €</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setActiveModal(null)}
+                    className="flex-1 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    disabled={activeTeam.money < 100}
+                    onClick={handleConfirmRebuy}
+                    className="flex-1 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black disabled:opacity-40"
+                  >
+                    Confirmar (-{rebuyCost} €)
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL ESCALA DE PREMIOS (PIRÁMIDE MÍTICA EN MÓVILES) */}
+          {activeModal === "LADDER" && (
+            <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-3 sm:p-4">
+              <div className="max-w-sm w-full max-h-[92vh] overflow-y-auto">
+                <PrizeLadderCard
+                  currentRound={currentRound}
+                  roundTeamStep={roundTeamStep}
+                  teams={teams}
+                  gameState={gameState}
+                  currentPrizeObj={currentPrizeObj}
+                  isModal={true}
+                  onClose={() => setActiveModal(null)}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* MODAL MÓVIL / QR */}
+          {activeModal === "QR" && (
+            <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4">
+              <div className="bg-slate-950 border-2 border-slate-600 rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl">
+                <h3 className="text-base font-black text-slate-100 mb-1 uppercase tracking-wider">
+                  Jugar desde iPhone
+                </h3>
+                <p className="text-slate-400 text-xs mb-4">
+                  Escanea con la cámara del móvil en la misma red Wi-Fi:
+                </p>
+                <div className="bg-white p-3 rounded-xl inline-block mb-4 shadow-xl">
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(shareUrl)}`}
+                    alt="QR"
+                    className="w-40 h-40 block"
+                  />
+                </div>
+                <div className="bg-slate-900 border border-slate-800 p-2.5 rounded-lg flex items-center justify-between text-xs text-slate-300 mb-4">
+                  <span className="font-mono truncate">{shareUrl}</span>
+                  <button
+                    onClick={copyShareLink}
+                    className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold ml-2 shrink-0"
+                  >
+                    {copied ? "Copiado" : "Copiar"}
+                  </button>
+                </div>
+                <button
+                  onClick={() => setActiveModal(null)}
+                  className="w-full py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-bold"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* FOOTER */}
+          <footer className="text-center py-2 text-[10px] text-slate-500 border-t border-slate-800/80">
+            ¿Quién Quiere Ser Millonario? • Edición 2 Equipos
+          </footer>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>

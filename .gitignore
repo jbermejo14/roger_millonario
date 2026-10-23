@@ -1,0 +1,13 @@
+# Binaries
+*.exe
+cloudflared.exe
+
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+
+# System files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,101 @@
+import http from "node:http";
+import fs from "node:fs";
+import path from "node:path";
+import os from "node:os";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const PORT = process.env.PORT || 3000;
+
+// Obtener la IP local de la Wi-Fi / Red
+function getLocalIp() {
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === "IPv4" && !iface.internal) {
+        return iface.address;
+      }
+    }
+  }
+  return "localhost";
+}
+
+const MIME_TYPES = {
+  ".html": "text/html; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".js": "application/javascript; charset=utf-8",
+  ".mjs": "application/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".ico": "image/x-icon",
+  ".mp3": "audio/mpeg",
+};
+
+const server = http.createServer((req, res) => {
+  let reqUrl = req.url.split("?")[0];
+  if (reqUrl === "/" || reqUrl === "") {
+    reqUrl = "/index.html";
+  }
+
+  const safePath = path.normalize(path.join(__dirname, reqUrl));
+  if (!safePath.startsWith(__dirname)) {
+    res.writeHead(403);
+    res.end("Acceso denegado");
+    return;
+  }
+
+  fs.stat(safePath, (err, stats) => {
+    if (err || !stats.isFile()) {
+      // Fallback a index.html para SPA
+      const indexPath = path.join(__dirname, "index.html");
+      fs.readFile(indexPath, (readErr, content) => {
+        if (readErr) {
+          res.writeHead(404);
+          res.end("404 No encontrado");
+        } else {
+          res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+          res.end(content);
+        }
+      });
+      return;
+    }
+
+    const ext = path.extname(safePath).toLowerCase();
+    const contentType = MIME_TYPES[ext] || "application/octet-stream";
+
+    res.writeHead(200, {
+      "Content-Type": contentType,
+      "Cache-Control": "no-cache",
+      "Access-Control-Allow-Origin": "*",
+    });
+
+    fs.createReadStream(safePath).pipe(res);
+  });
+});
+
+function startServer(portToTry) {
+  server.listen(portToTry, "0.0.0.0", () => {
+    const localIp = getLocalIp();
+    console.log("\n========================================================");
+    console.log("  🏆  ¿QUIÉN QUIERE SER MILLONARIO? - SERVIDOR ACTIVO");
+    console.log("========================================================");
+    console.log(`\n  🖥️  En tu PC:                http://localhost:${portToTry}`);
+    console.log(`  📱  En el iPhone de tu novia: http://${localIp}:${portToTry}\n`);
+    console.log("  (Ambos dispositivos deben estar en la misma red Wi-Fi)");
+    console.log("========================================================\n");
+  });
+
+  server.on("error", (err) => {
+    if (err.code === "EADDRINUSE") {
+      console.log(`⚠️  Puerto ${portToTry} ocupado. Probando en puerto ${portToTry + 1}...`);
+      startServer(portToTry + 1);
+    } else {
+      console.error("Error del servidor:", err);
+    }
+  });
+}
+
+startServer(Number(PORT));
