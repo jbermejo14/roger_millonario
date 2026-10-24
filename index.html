@@ -141,22 +141,6 @@
     "hint": "Aunque producen leche, beben agua fresca."
   },
   {
-    "id": 155,
-    "level": 2,
-    "category": "MÚSICA",
-    "question": "¿Cómo se titula esta canción?",
-    "options": [
-      "Titanium",
-      "Chandelier",
-      "Flames",
-      "She Wolf"
-    ],
-    "correct": 0,
-    "hint": "Lleva el nombre de un metal indestructible y superresistente: 'I am titanium'.",
-    "audioSrc": "./audio/titanium.mp3",
-    "audioStart": 0
-  },
-  {
     "id": 201,
     "level": 2,
     "category": "HISTORIA BÍBLICA",
@@ -1676,34 +1660,29 @@
       const level = customLevel !== null ? customLevel : (team?.level || 1);
       let chosen = null;
 
-      // 1. Pregunta musical de Titanium para nivel 2 (solo 1 vez en todo el concurso)
-      if (level === 2 && !usedQuestionIdsRef.current.has(155)) {
-        const tit = QUESTIONS_DB.find(q => q.id === 155);
-        if (tit) chosen = tit;
-      }
-      // 2. Pregunta de imagen Honda para nivel 3 (solo 1 vez en todo el concurso)
-      else if (level === 3 && !usedQuestionIdsRef.current.has(300)) {
+      // 1. Pregunta de imagen Honda para nivel 3 (solo 1 vez en todo el concurso)
+      if (level === 3 && !usedQuestionIdsRef.current.has(300)) {
         const hon = QUESTIONS_DB.find(q => q.id === 300);
         if (hon) chosen = hon;
       }
 
-      // 3. Buscar preguntas NO usadas del nivel exacto
+      // 2. Buscar preguntas NO usadas del nivel exacto
       if (!chosen) {
         const exactAvailable = QUESTIONS_DB.filter(q => 
           q.level === level && 
           !usedQuestionIdsRef.current.has(q.id) &&
-          q.id !== 155 && q.id !== 300
+          q.id !== 300
         );
 
         if (exactAvailable.length > 0) {
           chosen = exactAvailable[Math.floor(Math.random() * exactAvailable.length)];
         } else {
-          // 4. Si el nivel exacto se agotó: buscar en el mismo tramo de dificultad (evita repetir)
+          // 3. Si el nivel exacto se agotó: buscar en el mismo tramo de dificultad (evita repetir)
           const tierLevels = TIER_MAPPING[level] || [level];
           const tierAvailable = QUESTIONS_DB.filter(q => 
             tierLevels.includes(q.level) && 
             !usedQuestionIdsRef.current.has(q.id) &&
-            q.id !== 155 && q.id !== 300
+            q.id !== 300
           );
 
           if (tierAvailable.length > 0) {
