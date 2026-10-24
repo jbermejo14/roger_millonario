@@ -32,6 +32,8 @@ const MIME_TYPES = {
   ".png": "image/png",
   ".ico": "image/x-icon",
   ".mp3": "audio/mpeg",
+  ".m4a": "audio/mp4",
+  ".aac": "audio/aac",
 };
 
 const server = http.createServer((req, res) => {
