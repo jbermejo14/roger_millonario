@@ -464,8 +464,8 @@
   {
     "id": 603,
     "level": 6,
-    "category": "MÚSICA",
-    "question": "¿En qué película de animación aparece una versión de esta canción?",
+    "category": "CINE Y ANIMACIÓN",
+    "question": "«Shake It Off» (Taylor Swift): ¿En qué película de animación aparece una versión de esta canción?",
     "options": [
       "Zootrópolis",
       "¡Canta!",
@@ -473,9 +473,7 @@
       "Rompe Ralph"
     ],
     "correct": 1,
-    "hint": "Los simpáticos cerditos cantando y bailando con trajes brillantes en ¡Canta! (Sing).",
-    "audioSrc": "./audio/shakeitoff.mp3",
-    "audioStart": 40
+    "hint": "Los simpáticos cerditos cantando y bailando con trajes brillantes en ¡Canta! (Sing)."
   },
   {
     "id": 604,
@@ -860,6 +858,21 @@
     ],
     "correct": 1,
     "hint": "El esqueleto humano adulto consta de 206 huesos."
+  },
+  {
+    "id": 1105,
+    "level": 11,
+    "category": "GEOGRAFÍA Y ARQUITECTURA",
+    "question": "¿En qué ciudad se encuentra este emblemático edificio?",
+    "options": [
+      "Moscú",
+      "Berlín",
+      "Praga",
+      "Bucarest"
+    ],
+    "correct": 0,
+    "hint": "La emblemática Catedral de San Basilio, situada en la Plaza Roja de Moscú.",
+    "imageSrc": "./img/san_basilio.png"
   },
   {
     "id": 1201,
@@ -2417,11 +2430,11 @@
                       {/* IMAGEN DEL LOGO O PREGUNTA VISUAL */}
                       {currentQuestion.imageSrc && (
                         <div className="mt-3.5 flex justify-center">
-                          <div className="p-3 bg-white rounded-xl shadow-xl border-2 border-amber-400 inline-block max-w-[200px] sm:max-w-[240px]">
+                          <div className="p-2 sm:p-2.5 bg-slate-900/90 rounded-xl shadow-2xl border-2 border-amber-400 inline-block max-w-[260px] sm:max-w-[320px]">
                             <img
                               src={currentQuestion.imageSrc}
-                              alt="Logo"
-                              className="w-full h-auto max-h-32 sm:max-h-36 object-contain mx-auto"
+                              alt="Imagen de la pregunta"
+                              className="w-full h-auto max-h-48 sm:max-h-56 object-contain rounded-lg mx-auto shadow-md"
                             />
                           </div>
                         </div>
@@ -2481,12 +2494,6 @@
                             </span>
                             {!isTimerRunning && (
                               <span className="text-amber-300 font-bold bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/30 text-[10px]">
-                                Reloj pausado
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      )}
                                 Reloj pausado
                               </span>
                             )}
