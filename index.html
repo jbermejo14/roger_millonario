@@ -129,7 +129,7 @@
   {
     "id": 104,
     "level": 1,
-    "category": "CURIOSIDADES",
+    "category": "ANIMALES",
     "question": "¿Qué beben las vacas para hidratarse?",
     "options": [
       "Leche",
@@ -143,7 +143,7 @@
   {
     "id": 155,
     "level": 2,
-    "category": "MÚSICA (FRAGMENTO DE 5 SEGUNDOS)",
+    "category": "MÚSICA",
     "question": "¿Cómo se titula esta canción?",
     "options": [
       "Titanium",
@@ -244,7 +244,7 @@
   {
     "id": 302,
     "level": 3,
-    "category": "MÚSICA Y DEPORTES (FRAGMENTO DE 5 SEGUNDOS)",
+    "category": "MÚSICA",
     "question": "¿Para qué evento deportivo fue famosa esta canción?",
     "options": [
       "Mundial de Brasil 2010",
@@ -302,7 +302,7 @@
   {
     "id": 403,
     "level": 4,
-    "category": "MÚSICA (FRAGMENTO DE 5 SEGUNDOS)",
+    "category": "MÚSICA",
     "question": "¿Cómo se llama esta canción?",
     "options": [
       "Blinding Lights",
@@ -388,7 +388,7 @@
   {
     "id": 503,
     "level": 5,
-    "category": "MÚSICA (FRAGMENTO DE 5 SEGUNDOS)",
+    "category": "MÚSICA",
     "question": "¿Qué grupo la interpreta?",
     "options": [
       "ABBA",
@@ -460,7 +460,7 @@
   {
     "id": 603,
     "level": 6,
-    "category": "CINE Y MÚSICA (FRAGMENTO DE 5 SEGUNDOS)",
+    "category": "MÚSICA",
     "question": "¿En qué película de animación aparece una versión de esta canción?",
     "options": [
       "Zootrópolis",
@@ -700,8 +700,8 @@
   {
     "id": 904,
     "level": 9,
-    "category": "CINE Y ANIMACIÓN",
-    "question": "La canción de Meg («No hablaré de mi amor»): ¿De qué película de animación es?",
+    "category": "MÚSICA",
+    "question": "¿De qué película de animación es esta canción?",
     "options": [
       "Pocahontas",
       "Hércules",
@@ -709,7 +709,9 @@
       "Aladdín"
     ],
     "correct": 1,
-    "hint": "Megara cantando con las Musas en Hércules."
+    "hint": "Megara cantando con las Musas en Hércules.",
+    "audioSrc": "./audio/hercules.mp3",
+    "audioStart": 60
   },
   {
     "id": 905,
@@ -1040,7 +1042,7 @@
   {
     "id": 1405,
     "level": 14,
-    "category": "MÚSICA Y CURIOSIDADES",
+    "category": "MÚSICA",
     "question": "¿Cuántas reproducciones tiene aproximadamente el videoclip oficial de esta canción en YouTube?",
     "options": [
       "6.000 millones",
@@ -1579,10 +1581,10 @@
         }, 1000);
       };
 
-      // 2. Play infinito / continuo (toggle)
+      // 2. Play / Pausar
       const toggleInfiniteAudio = () => {
         if (!currentQuestion?.audioSrc) return;
-        if (isPlayingAudio && audioMode === "INFINITE") {
+        if (isPlayingAudio) {
           if (audioPlayerRef.current) audioPlayerRef.current.pause();
           setIsPlayingAudio(false);
           setAudioMode("NONE");
@@ -2417,50 +2419,32 @@
                       {currentQuestion.audioSrc && (
                         <div className="mt-4 pt-3 border-t border-slate-700/60 flex flex-col items-center gap-2">
                           <div className="flex flex-wrap items-center justify-center gap-2">
-                            {/* 1. Botón 5 segundos */}
-                            <button
-                              onClick={play5SecondsAudio}
-                              className={`px-3.5 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition flex items-center gap-1.5 ${
-                                audioMode === "SNIPPET_5S" && isPlayingAudio
-                                  ? "bg-amber-400 text-slate-950 shadow-lg shadow-amber-400/40 animate-pulse"
-                                  : "bg-blue-900/80 hover:bg-blue-800 border border-slate-400 text-slate-100"
-                              }`}
-                              title="Reproducir solo los 5 segundos del concurso"
-                            >
-                              <span>⚡ 5 Segundos</span>
-                              {audioMode === "SNIPPET_5S" && isPlayingAudio && (
-                                <span className="bg-slate-950 text-amber-300 px-1.5 py-0.2 rounded text-[10px]">
-                                  {audioSecondsLeft}s
-                                </span>
-                              )}
-                            </button>
-
-                            {/* 2. Botón Play Infinito */}
+                            {/* 1. Botón Play / Pausar */}
                             <button
                               onClick={toggleInfiniteAudio}
-                              className={`px-3.5 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition flex items-center gap-1.5 ${
-                                audioMode === "INFINITE" && isPlayingAudio
+                              className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition flex items-center gap-1.5 ${
+                                isPlayingAudio
                                   ? "bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-lg shadow-emerald-500/40 animate-pulse"
                                   : "bg-slate-800 hover:bg-slate-700 border border-emerald-500/60 text-emerald-300"
                               }`}
-                              title="Reproducir la canción de forma continua sin límite de tiempo"
+                              title={isPlayingAudio ? "Pausar música" : "Reproducir música"}
                             >
-                              <span>{audioMode === "INFINITE" && isPlayingAudio ? "⏸ Pausar Música" : "▶ Play Infinito"}</span>
+                              <span>{isPlayingAudio ? "⏸ Pausar" : "▶ Play"}</span>
                             </button>
 
-                            {/* 3. Botón Reiniciar Canción */}
+                            {/* 2. Botón Reiniciar Canción */}
                             <button
                               onClick={restartAudio}
-                              className="px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 transition flex items-center gap-1"
+                              className="px-3.5 py-2 rounded-lg text-xs font-bold uppercase tracking-wider bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 transition flex items-center gap-1"
                               title="Reiniciar la canción desde el inicio del fragmento"
                             >
                               <span>↺ Reiniciar</span>
                             </button>
 
-                            {/* 4. Botón Pausar / Reanudar Temporizador */}
+                            {/* 3. Botón Pausar / Reanudar Temporizador */}
                             <button
                               onClick={() => setIsTimerRunning(prev => !prev)}
-                              className={`px-3 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition flex items-center gap-1 ${
+                              className={`px-3.5 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition flex items-center gap-1 ${
                                 !isTimerRunning
                                   ? "bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/40 font-black animate-pulse"
                                   : "bg-slate-800 hover:bg-slate-700 border border-amber-400/50 text-amber-300"
@@ -2473,14 +2457,18 @@
 
                           <div className="text-[11px] text-slate-400 flex flex-wrap items-center justify-center gap-2.5 mt-0.5">
                             <span>
-                              {audioMode === "INFINITE" && isPlayingAudio
-                                ? "🎶 Reproducción continua infinita activa"
-                                : audioMode === "SNIPPET_5S" && isPlayingAudio
-                                ? `⏱ Fragmento de 5 segundos activo (${audioSecondsLeft}s)`
+                              {isPlayingAudio
+                                ? "🎶 Música sonando..."
                                 : "Audio listo para reproducir"}
                             </span>
                             {!isTimerRunning && (
                               <span className="text-amber-300 font-bold bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/30 text-[10px]">
+                                Reloj pausado
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
                                 Reloj pausado
                               </span>
                             )}
