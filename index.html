@@ -1500,6 +1500,7 @@
       // Reproductor de audio de 5 segundos
       const audioPlayerRef = useRef(null);
       const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+      const [audioMode, setAudioMode] = useState("NONE"); // "NONE" | "SNIPPET_5S" | "INFINITE"
       const [audioSecondsLeft, setAudioSecondsLeft] = useState(5);
       const audioCountdownRef = useRef(null);
 
@@ -1532,43 +1533,47 @@
         sound.setMuted(next);
       };
 
-      // Reproducción del fragmento de 5 segundos
+      // Controlador de audio para preguntas musicales: 5 segundos, infinito y reiniciar
+      const initAudioElement = () => {
+        if (!audioPlayerRef.current) {
+          audioPlayerRef.current = new Audio(currentQuestion.audioSrc);
+        } else if (audioPlayerRef.current.src !== new URL(currentQuestion.audioSrc, window.location.href).href) {
+          audioPlayerRef.current.src = currentQuestion.audioSrc;
+        }
+        return audioPlayerRef.current;
+      };
+
+      // 1. Fragmento de 5 segundos
       const play5SecondsAudio = () => {
         if (!currentQuestion?.audioSrc) return;
-        if (isPlayingAudio) {
-          if (audioPlayerRef.current) {
-            audioPlayerRef.current.pause();
-          }
+        if (isPlayingAudio && audioMode === "SNIPPET_5S") {
+          if (audioPlayerRef.current) audioPlayerRef.current.pause();
           clearInterval(audioCountdownRef.current);
           setIsPlayingAudio(false);
+          setAudioMode("NONE");
           setAudioSecondsLeft(5);
           sound.startSuspenseDrone();
           return;
         }
 
         sound.stopSuspenseDrone();
-        if (!audioPlayerRef.current) {
-          audioPlayerRef.current = new Audio(currentQuestion.audioSrc);
-        } else {
-          audioPlayerRef.current.src = currentQuestion.audioSrc;
-        }
-
-        audioPlayerRef.current.currentTime = currentQuestion.audioStart || 0;
-        audioPlayerRef.current.play().catch(e => console.warn("Audio error:", e));
+        clearInterval(audioCountdownRef.current);
+        const player = initAudioElement();
+        player.currentTime = currentQuestion.audioStart || 0;
+        player.play().catch(e => console.warn("Audio error:", e));
         setIsPlayingAudio(true);
+        setAudioMode("SNIPPET_5S");
         setAudioSecondsLeft(5);
 
         let left = 5;
-        clearInterval(audioCountdownRef.current);
         audioCountdownRef.current = setInterval(() => {
           left -= 1;
           setAudioSecondsLeft(left);
           if (left <= 0) {
             clearInterval(audioCountdownRef.current);
-            if (audioPlayerRef.current) {
-              audioPlayerRef.current.pause();
-            }
+            if (audioPlayerRef.current) audioPlayerRef.current.pause();
             setIsPlayingAudio(false);
+            setAudioMode("NONE");
             setAudioSecondsLeft(5);
             if (gameState === "QUESTION" && !isAnswerConfirmed) {
               sound.startSuspenseDrone();
@@ -1577,12 +1582,48 @@
         }, 1000);
       };
 
+      // 2. Play infinito / continuo (toggle)
+      const toggleInfiniteAudio = () => {
+        if (!currentQuestion?.audioSrc) return;
+        if (isPlayingAudio && audioMode === "INFINITE") {
+          if (audioPlayerRef.current) audioPlayerRef.current.pause();
+          setIsPlayingAudio(false);
+          setAudioMode("NONE");
+          sound.startSuspenseDrone();
+          return;
+        }
+
+        clearInterval(audioCountdownRef.current);
+        sound.stopSuspenseDrone();
+        const player = initAudioElement();
+        if (player.paused && (player.currentTime < (currentQuestion.audioStart || 0) || player.ended)) {
+          player.currentTime = currentQuestion.audioStart || 0;
+        }
+        player.play().catch(e => console.warn("Audio error:", e));
+        setIsPlayingAudio(true);
+        setAudioMode("INFINITE");
+        setAudioSecondsLeft(5);
+      };
+
+      // 3. Reiniciar canción desde el inicio del fragmento
+      const restartAudio = () => {
+        if (!currentQuestion?.audioSrc) return;
+        sound.stopSuspenseDrone();
+        clearInterval(audioCountdownRef.current);
+        const player = initAudioElement();
+        player.currentTime = currentQuestion.audioStart || 0;
+        player.play().catch(e => console.warn("Audio error:", e));
+        setIsPlayingAudio(true);
+        setAudioMode("INFINITE");
+      };
+
       useEffect(() => {
         if (audioPlayerRef.current) {
           audioPlayerRef.current.pause();
         }
         clearInterval(audioCountdownRef.current);
         setIsPlayingAudio(false);
+        setAudioMode("NONE");
         setAudioSecondsLeft(5);
       }, [currentQuestion]);
 
@@ -1755,6 +1796,10 @@
 
       const handleTimeOut = () => {
         sound.stopSuspenseDrone();
+        if (audioPlayerRef.current) audioPlayerRef.current.pause();
+        clearInterval(audioCountdownRef.current);
+        setIsPlayingAudio(false);
+        setAudioMode("NONE");
         sound.playWrong();
         setIsTimerRunning(false);
         setIsAnswerConfirmed(true);
@@ -1775,7 +1820,7 @@
       };
 
       const handleWalkAway = () => {
-        if (gameState !== "QUESTION" || isAnswerConfirmed || !isTimerRunning) return;
+        if (gameState !== "QUESTION" || isAnswerConfirmed || timeLeft <= 0) return;
         const currentTeam = teams[activeTeamIndex];
         if (currentTeam.money <= 0) return;
 
@@ -1783,6 +1828,10 @@
         if (!ok) return;
 
         sound.stopSuspenseDrone();
+        if (audioPlayerRef.current) audioPlayerRef.current.pause();
+        clearInterval(audioCountdownRef.current);
+        setIsPlayingAudio(false);
+        setAudioMode("NONE");
         sound.playCorrect();
         setIsTimerRunning(false);
         setIsAnswerConfirmed(true);
@@ -1805,6 +1854,10 @@
         if (selectedOption === null || gameState !== "QUESTION") return;
         setIsAnswerConfirmed(true);
         setIsTimerRunning(false);
+        if (audioPlayerRef.current) audioPlayerRef.current.pause();
+        clearInterval(audioCountdownRef.current);
+        setIsPlayingAudio(false);
+        setAudioMode("NONE");
 
         const isCorrect = selectedOption === currentQuestion.correct;
         const activeTeam = teams[activeTeamIndex];
@@ -2207,9 +2260,9 @@
               <div className="space-y-6">
                 {/* BARRA SUPERIOR: CRONÓMETRO Y LOS 4 COMODINES CIRCULARES */}
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                  {/* Cronómetro Clásico */}
+                  {/* Cronómetro Clásico con Botón de Pausa */}
                   <div className="flex items-center gap-3">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-lg border-2 ${
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-lg border-2 transition-all ${
                       timeLeft <= 10
                         ? "border-red-500 text-red-400 bg-red-950/40 animate-pulse"
                         : "border-amber-400 text-slate-100 bg-blue-950 shadow-lg shadow-blue-500/20"
@@ -2225,8 +2278,21 @@
                           </span>
                         )}
                       </div>
-                      <div className="text-[11px] text-slate-400">
-                        {isTimerRunning ? "30 segundos activos" : "Reloj detenido"}
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[11px] text-slate-400">
+                          {isTimerRunning ? "30s activos" : "Pausado"}
+                        </span>
+                        <button
+                          onClick={() => setIsTimerRunning(prev => !prev)}
+                          className={`text-[10px] font-black px-2 py-0.5 rounded border transition ${
+                            !isTimerRunning
+                              ? "bg-amber-400 text-slate-950 border-amber-400 shadow-md animate-pulse"
+                              : "bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700"
+                          }`}
+                          title={isTimerRunning ? "Pausar el tiempo" : "Reanudar el tiempo"}
+                        >
+                          {isTimerRunning ? "⏸ Pausar" : "▶ Reanudar"}
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -2342,22 +2408,78 @@
                         </div>
                       )}
 
-                      {/* BOTÓN DE AUDIO DE 5 SEGUNDOS (PREGUNTA MUSICAL) */}
+                      {/* CONTROLES COMPLETOS DE AUDIO (PREGUNTA MUSICAL) */}
                       {currentQuestion.audioSrc && (
-                        <div className="mt-4 pt-3 border-t border-slate-700/60 flex flex-col items-center">
-                          <button
-                            onClick={play5SecondsAudio}
-                            className={`px-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition ${
-                              isPlayingAudio
-                                ? "bg-amber-400 text-slate-950 font-black animate-pulse"
-                                : "bg-blue-900/80 hover:bg-blue-800 border border-slate-400 text-slate-100"
-                            }`}
-                          >
-                            {isPlayingAudio ? `Reproduciendo fragmento (${audioSecondsLeft}s)` : "Reproducir fragmento (5 segundos)"}
-                          </button>
-                          <span className="text-[11px] text-slate-400 mt-1">
-                            Podéis escucharlo de nuevo dentro del tiempo de la pregunta.
-                          </span>
+                        <div className="mt-4 pt-3 border-t border-slate-700/60 flex flex-col items-center gap-2">
+                          <div className="flex flex-wrap items-center justify-center gap-2">
+                            {/* 1. Botón 5 segundos */}
+                            <button
+                              onClick={play5SecondsAudio}
+                              className={`px-3.5 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition flex items-center gap-1.5 ${
+                                audioMode === "SNIPPET_5S" && isPlayingAudio
+                                  ? "bg-amber-400 text-slate-950 shadow-lg shadow-amber-400/40 animate-pulse"
+                                  : "bg-blue-900/80 hover:bg-blue-800 border border-slate-400 text-slate-100"
+                              }`}
+                              title="Reproducir solo los 5 segundos del concurso"
+                            >
+                              <span>⚡ 5 Segundos</span>
+                              {audioMode === "SNIPPET_5S" && isPlayingAudio && (
+                                <span className="bg-slate-950 text-amber-300 px-1.5 py-0.2 rounded text-[10px]">
+                                  {audioSecondsLeft}s
+                                </span>
+                              )}
+                            </button>
+
+                            {/* 2. Botón Play Infinito */}
+                            <button
+                              onClick={toggleInfiniteAudio}
+                              className={`px-3.5 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition flex items-center gap-1.5 ${
+                                audioMode === "INFINITE" && isPlayingAudio
+                                  ? "bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-lg shadow-emerald-500/40 animate-pulse"
+                                  : "bg-slate-800 hover:bg-slate-700 border border-emerald-500/60 text-emerald-300"
+                              }`}
+                              title="Reproducir la canción de forma continua sin límite de tiempo"
+                            >
+                              <span>{audioMode === "INFINITE" && isPlayingAudio ? "⏸ Pausar Música" : "▶ Play Infinito"}</span>
+                            </button>
+
+                            {/* 3. Botón Reiniciar Canción */}
+                            <button
+                              onClick={restartAudio}
+                              className="px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 transition flex items-center gap-1"
+                              title="Reiniciar la canción desde el inicio del fragmento"
+                            >
+                              <span>↺ Reiniciar</span>
+                            </button>
+
+                            {/* 4. Botón Pausar / Reanudar Temporizador */}
+                            <button
+                              onClick={() => setIsTimerRunning(prev => !prev)}
+                              className={`px-3 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition flex items-center gap-1 ${
+                                !isTimerRunning
+                                  ? "bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/40 font-black animate-pulse"
+                                  : "bg-slate-800 hover:bg-slate-700 border border-amber-400/50 text-amber-300"
+                              }`}
+                              title="Pausar o reanudar el cronómetro de la pregunta"
+                            >
+                              <span>{isTimerRunning ? "⏸ Pausar Tiempo" : "▶ Reanudar Tiempo"}</span>
+                            </button>
+                          </div>
+
+                          <div className="text-[11px] text-slate-400 flex flex-wrap items-center justify-center gap-2.5 mt-0.5">
+                            <span>
+                              {audioMode === "INFINITE" && isPlayingAudio
+                                ? "🎶 Reproducción continua infinita activa"
+                                : audioMode === "SNIPPET_5S" && isPlayingAudio
+                                ? `⏱ Fragmento de 5 segundos activo (${audioSecondsLeft}s)`
+                                : "Audio listo para reproducir"}
+                            </span>
+                            {!isTimerRunning && (
+                              <span className="text-amber-300 font-bold bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/30 text-[10px]">
+                                Reloj pausado
+                              </span>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
