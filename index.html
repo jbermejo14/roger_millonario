@@ -1117,9 +1117,9 @@
         }
       }, []);
 
-      const publicUrl = "https://www-understood-broadway-flavor.trycloudflare.com";
-      const shareUrl = (typeof window !== "undefined" && window.location.origin && !window.location.origin.includes("localhost"))
-        ? window.location.origin
+      const publicUrl = "https://jbermejo14.github.io/roger_millonario/";
+      const shareUrl = (typeof window !== "undefined" && window.location.href && !window.location.origin.includes("localhost") && !window.location.origin.includes("127.0.0.1"))
+        ? window.location.href.split("?")[0].split("#")[0]
         : publicUrl;
 
       const unlockAudio = () => {
