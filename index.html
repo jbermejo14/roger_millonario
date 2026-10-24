@@ -144,7 +144,7 @@
     "id": 155,
     "level": 2,
     "category": "MÚSICA (FRAGMENTO DE 5 SEGUNDOS)",
-    "question": "Escucha el fragmento de audio de 5 segundos: ¿Cómo se titula este temazo de David Guetta y Sia?",
+    "question": "¿Cómo se titula esta canción?",
     "options": [
       "Titanium",
       "Chandelier",
@@ -827,7 +827,7 @@
     "id": 1103,
     "level": 11,
     "category": "MÚSICA",
-    "question": "«Bailando» (Enrique Iglesias): ¿En qué año salió esta canción?",
+    "question": "¿En qué año salió esta canción?",
     "options": [
       "2014",
       "2013",
@@ -835,7 +835,9 @@
       "2016"
     ],
     "correct": 0,
-    "hint": "Fue el megaéxito del verano de 2014."
+    "hint": "Fue el megaéxito del verano de 2014.",
+    "audioSrc": "./audio/bailando.mp3",
+    "audioStart": 60
   },
   {
     "id": 1104,
@@ -869,7 +871,7 @@
     "id": 1202,
     "level": 12,
     "category": "CINE Y ANIMACIÓN",
-    "question": "«Suéltalo» («Let It Go»): ¿En qué año se estrenó esta película (Frozen)?",
+    "question": "¿En qué año se estrenó esta película?",
     "options": [
       "2014",
       "2013",
@@ -877,7 +879,9 @@
       "2017"
     ],
     "correct": 1,
-    "hint": "Frozen se estrenó a finales de 2013."
+    "hint": "Frozen se estrenó a finales de 2013.",
+    "audioSrc": "./audio/frozen.mp3",
+    "audioStart": 63
   },
   {
     "id": 1203,
@@ -1037,7 +1041,7 @@
     "id": 1405,
     "level": 14,
     "category": "MÚSICA Y CURIOSIDADES",
-    "question": "«Despacito»: ¿Cuántas reproducciones tiene aproximadamente el videoclip oficial de Luis Fonsi y Daddy Yankee en YouTube?",
+    "question": "¿Cuántas reproducciones tiene aproximadamente el videoclip oficial de esta canción en YouTube?",
     "options": [
       "6.000 millones",
       "8.000 millones",
@@ -1045,7 +1049,9 @@
       "9.000 millones"
     ],
     "correct": 1,
-    "hint": "Uno de los videoclips más vistos de YouTube con más de 8.500 millones de visitas."
+    "hint": "Uno de los videoclips más vistos de YouTube con más de 8.500 millones de visitas.",
+    "audioSrc": "./audio/despacito.mp3",
+    "audioStart": 30
   },
   {
     "id": 1501,
@@ -1102,20 +1108,6 @@
     ],
     "correct": 2,
     "hint": "El libro de Jueces y la historia de Sansón."
-  },
-  {
-    "id": 1505,
-    "level": 15,
-    "category": "ASTRONOMÍA",
-    "question": "¿Qué planeta tiene los días más largos que sus años?",
-    "options": [
-      "Marte",
-      "Neptuno",
-      "Venus",
-      "Saturno"
-    ],
-    "correct": 2,
-    "hint": "Venus tarda 243 días terrestres en rotar sobre su eje y solo 225 días terrestres en orbitar al Sol."
   }
 ];
 
@@ -1560,7 +1552,12 @@
         clearInterval(audioCountdownRef.current);
         const player = initAudioElement();
         player.currentTime = currentQuestion.audioStart || 0;
-        player.play().catch(e => console.warn("Audio error:", e));
+        player.play().catch(e => {
+          console.warn("Audio error:", e);
+          clearInterval(audioCountdownRef.current);
+          setIsPlayingAudio(false);
+          setAudioMode("NONE");
+        });
         setIsPlayingAudio(true);
         setAudioMode("SNIPPET_5S");
         setAudioSecondsLeft(5);
@@ -1599,7 +1596,11 @@
         if (player.paused && (player.currentTime < (currentQuestion.audioStart || 0) || player.ended)) {
           player.currentTime = currentQuestion.audioStart || 0;
         }
-        player.play().catch(e => console.warn("Audio error:", e));
+        player.play().catch(e => {
+          console.warn("Audio error:", e);
+          setIsPlayingAudio(false);
+          setAudioMode("NONE");
+        });
         setIsPlayingAudio(true);
         setAudioMode("INFINITE");
         setAudioSecondsLeft(5);
@@ -1612,7 +1613,11 @@
         clearInterval(audioCountdownRef.current);
         const player = initAudioElement();
         player.currentTime = currentQuestion.audioStart || 0;
-        player.play().catch(e => console.warn("Audio error:", e));
+        player.play().catch(e => {
+          console.warn("Audio error:", e);
+          setIsPlayingAudio(false);
+          setAudioMode("NONE");
+        });
         setIsPlayingAudio(true);
         setAudioMode("INFINITE");
       };
