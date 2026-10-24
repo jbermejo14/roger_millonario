@@ -51,7 +51,13 @@ const server = http.createServer((req, res) => {
 
   fs.stat(safePath, (err, stats) => {
     if (err || !stats.isFile()) {
-      // Fallback a index.html para SPA
+      // Si se pide un recurso con extensión (audio, imagen, etc.) que no existe, responder 404 real
+      if (path.extname(reqUrl)) {
+        res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+        res.end("404 No encontrado");
+        return;
+      }
+      // Fallback a index.html solo para rutas SPA sin extensión
       const indexPath = path.join(__dirname, "index.html");
       fs.readFile(indexPath, (readErr, content) => {
         if (readErr) {
@@ -67,14 +73,42 @@ const server = http.createServer((req, res) => {
 
     const ext = path.extname(safePath).toLowerCase();
     const contentType = MIME_TYPES[ext] || "application/octet-stream";
+    const totalSize = stats.size;
+    const range = req.headers.range;
 
-    res.writeHead(200, {
-      "Content-Type": contentType,
-      "Cache-Control": "no-cache",
-      "Access-Control-Allow-Origin": "*",
-    });
+    // Soporte completo para Range requests (HTTP 206) - esencial para audio y seek en móviles/navegadores
+    if (range) {
+      const parts = range.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : totalSize - 1;
 
-    fs.createReadStream(safePath).pipe(res);
+      if (start >= totalSize || end >= totalSize) {
+        res.writeHead(416, { "Content-Range": `bytes */${totalSize}` });
+        res.end();
+        return;
+      }
+
+      const chunkSize = (end - start) + 1;
+      res.writeHead(206, {
+        "Content-Range": `bytes ${start}-${end}/${totalSize}`,
+        "Accept-Ranges": "bytes",
+        "Content-Length": chunkSize,
+        "Content-Type": contentType,
+        "Access-Control-Allow-Origin": "*",
+      });
+
+      fs.createReadStream(safePath, { start, end }).pipe(res);
+    } else {
+      res.writeHead(200, {
+        "Content-Length": totalSize,
+        "Content-Type": contentType,
+        "Accept-Ranges": "bytes",
+        "Cache-Control": "no-cache",
+        "Access-Control-Allow-Origin": "*",
+      });
+
+      fs.createReadStream(safePath).pipe(res);
+    }
   });
 });
 
