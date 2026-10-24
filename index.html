@@ -1079,8 +1079,8 @@
     function App() {
       const [muted, setMuted] = useState(false);
       const [teams, setTeams] = useState([
-        { id: 0, name: "Equipo 1", level: 1, money: 0, safeMoney: 0, isAlive: true, status: "PLAYING", lifelines: { call: true, fifty: true, public: true, host: true } },
-        { id: 1, name: "Equipo 2", level: 1, money: 0, safeMoney: 0, isAlive: true, status: "PLAYING", lifelines: { call: true, fifty: true, public: true, host: true } }
+        { id: 0, name: "Equipo 1", level: 1, money: 0, safeMoney: 0, isAlive: true, status: "PLAYING", lifelines: { fifty: true, call: true, call2: true, public: true } },
+        { id: 1, name: "Equipo 2", level: 1, money: 0, safeMoney: 0, isAlive: true, status: "PLAYING", lifelines: { fifty: true, call: true, call2: true, public: true } }
       ]);
       const [gameState, setGameState] = useState("SETUP"); // SETUP | THEME_REVEAL | QUESTION | ANSWERED | MATCH_SUMMARY | FINISHED
       
@@ -1223,8 +1223,8 @@
         setMatchNumber(1);
         setMatchHistory([]);
         const initialTeams = [
-          { ...teams[0], level: 1, money: 0, safeMoney: 0, isAlive: true, status: "PLAYING", lifelines: { call: true, fifty: true, public: true, host: true } },
-          { ...teams[1], level: 1, money: 0, safeMoney: 0, isAlive: true, status: "PLAYING", lifelines: { call: true, fifty: true, public: true, host: true } }
+          { ...teams[0], level: 1, money: 0, safeMoney: 0, isAlive: true, status: "PLAYING", lifelines: { fifty: true, call: true, call2: true, public: true } },
+          { ...teams[1], level: 1, money: 0, safeMoney: 0, isAlive: true, status: "PLAYING", lifelines: { fifty: true, call: true, call2: true, public: true } }
         ];
         setTeams(initialTeams);
         setActiveTeamIndex(0);
@@ -1239,8 +1239,8 @@
         const nextNum = matchNumber + 1;
         setMatchNumber(nextNum);
         const resetTeams = [
-          { ...teams[0], level: 1, money: 0, safeMoney: 0, isAlive: true, status: "PLAYING", lifelines: { call: true, fifty: true, public: true, host: true } },
-          { ...teams[1], level: 1, money: 0, safeMoney: 0, isAlive: true, status: "PLAYING", lifelines: { call: true, fifty: true, public: true, host: true } }
+          { ...teams[0], level: 1, money: 0, safeMoney: 0, isAlive: true, status: "PLAYING", lifelines: { fifty: true, call: true, call2: true, public: true } },
+          { ...teams[1], level: 1, money: 0, safeMoney: 0, isAlive: true, status: "PLAYING", lifelines: { fifty: true, call: true, call2: true, public: true } }
         ];
         setTeams(resetTeams);
         setActiveTeamIndex(0);
@@ -1277,8 +1277,8 @@
         setMatchNumber(1);
         setMatchHistory([]);
         setTeams([
-          { id: 0, name: teams[0].name || "Equipo 1", level: 1, money: 0, safeMoney: 0, isAlive: true, status: "PLAYING", lifelines: { call: true, fifty: true, public: true, host: true } },
-          { id: 1, name: teams[1].name || "Equipo 2", level: 1, money: 0, safeMoney: 0, isAlive: true, status: "PLAYING", lifelines: { call: true, fifty: true, public: true, host: true } }
+          { id: 0, name: teams[0].name || "Equipo 1", level: 1, money: 0, safeMoney: 0, isAlive: true, status: "PLAYING", lifelines: { fifty: true, call: true, call2: true, public: true } },
+          { id: 1, name: teams[1].name || "Equipo 2", level: 1, money: 0, safeMoney: 0, isAlive: true, status: "PLAYING", lifelines: { fifty: true, call: true, call2: true, public: true } }
         ]);
         setGameState("SETUP");
       };
@@ -1469,10 +1469,10 @@
           setIsTimerRunning(false);
           setLifelineCountdown(30);
           setActiveModal("PUBLIC");
-        } else if (type === "host") {
+        } else if (type === "call2") {
           setIsTimerRunning(false);
-          setLifelineCountdown(45);
-          setActiveModal("HOST");
+          setLifelineCountdown(30);
+          setActiveModal("CALL2");
         }
       };
 
@@ -1498,7 +1498,7 @@
 
       useEffect(() => {
         let timer = null;
-        if (activeModal && (activeModal === "CALL" || activeModal === "PUBLIC" || activeModal === "HOST")) {
+        if (activeModal && (activeModal === "CALL" || activeModal === "CALL2" || activeModal === "PUBLIC")) {
           timer = setInterval(() => {
             setLifelineCountdown(prev => {
               if (prev <= 1) {
@@ -1620,11 +1620,7 @@
                   )}
                 </div>
 
-                {currentQuestion?.hint && (
-                  <span className="text-slate-300 italic max-w-md truncate">
-                    Pista: &ldquo;{currentQuestion.hint}&rdquo;
-                  </span>
-                )}
+                
 
                 <div className="flex items-center gap-2">
                   <button
@@ -1813,7 +1809,7 @@
                       )}
                     </button>
 
-                    {/* LLAMADA */}
+                    {/* LLAMADA 1 */}
                     <button
                       onClick={() => handleUseLifeline("call")}
                       disabled={gameState !== "QUESTION" || isAnswerConfirmed}
@@ -1822,10 +1818,35 @@
                           ? "border-slate-300 bg-blue-950 text-slate-100 hover:border-amber-400 hover:scale-105 shadow-md shadow-blue-500/20"
                           : "border-slate-800 bg-slate-950 text-slate-600 cursor-pointer"
                       }`}
-                      title={activeTeam.lifelines.call ? "Comodín de la llamada" : `Gastado. Recomprar al 50% (${rebuyCost} €)`}
+                      title={activeTeam.lifelines.call ? "Comodín de la llamada 1" : `Gastado. Recomprar al 50% (${rebuyCost} €)`}
                     >
-                      <span className="text-base">☎</span>
+                      <div className="flex flex-col items-center leading-none">
+                        <span className="text-sm">☎</span>
+                        <span className="text-[9px] font-bold">1</span>
+                      </div>
                       {!activeTeam.lifelines.call && (
+                        <span className="absolute -bottom-1 text-[8px] bg-amber-500 text-slate-950 font-black px-1 rounded-full">
+                          50%
+                        </span>
+                      )}
+                    </button>
+
+                    {/* LLAMADA 2 */}
+                    <button
+                      onClick={() => handleUseLifeline("call2")}
+                      disabled={gameState !== "QUESTION" || isAnswerConfirmed}
+                      className={`relative w-12 h-12 rounded-full border-2 font-black text-xs transition-all flex items-center justify-center ${
+                        activeTeam.lifelines.call2
+                          ? "border-slate-300 bg-blue-950 text-slate-100 hover:border-amber-400 hover:scale-105 shadow-md shadow-blue-500/20"
+                          : "border-slate-800 bg-slate-950 text-slate-600 cursor-pointer"
+                      }`}
+                      title={activeTeam.lifelines.call2 ? "Comodín de la llamada 2" : `Gastado. Recomprar al 50% (${rebuyCost} €)`}
+                    >
+                      <div className="flex flex-col items-center leading-none">
+                        <span className="text-sm">☎</span>
+                        <span className="text-[9px] font-bold">2</span>
+                      </div>
+                      {!activeTeam.lifelines.call2 && (
                         <span className="absolute -bottom-1 text-[8px] bg-amber-500 text-slate-950 font-black px-1 rounded-full">
                           50%
                         </span>
@@ -1845,25 +1866,6 @@
                     >
                       <span className="text-[11px]">Público</span>
                       {!activeTeam.lifelines.public && (
-                        <span className="absolute -bottom-1 text-[8px] bg-amber-500 text-slate-950 font-black px-1 rounded-full">
-                          50%
-                        </span>
-                      )}
-                    </button>
-
-                    {/* PRESENTADOR */}
-                    <button
-                      onClick={() => handleUseLifeline("host")}
-                      disabled={gameState !== "QUESTION" || isAnswerConfirmed}
-                      className={`relative w-12 h-12 rounded-full border-2 font-black text-xs transition-all flex items-center justify-center ${
-                        activeTeam.lifelines.host
-                          ? "border-slate-300 bg-blue-950 text-slate-100 hover:border-amber-400 hover:scale-105 shadow-md shadow-blue-500/20"
-                          : "border-slate-800 bg-slate-950 text-slate-600 cursor-pointer"
-                      }`}
-                      title={activeTeam.lifelines.host ? "Comodín del presentador" : `Gastado. Recomprar al 50% (${rebuyCost} €)`}
-                    >
-                      <span className="text-[10px]">Host</span>
-                      {!activeTeam.lifelines.host && (
                         <span className="absolute -bottom-1 text-[8px] bg-amber-500 text-slate-950 font-black px-1 rounded-full">
                           50%
                         </span>
@@ -2372,25 +2374,20 @@
             </div>
           )}
 
-          {/* MODAL COMODÍN PRESENTADOR */}
-          {activeModal === "HOST" && (
+          {/* MODAL COMODÍN LLAMADA 2 */}
+          {activeModal === "CALL2" && (
             <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4">
-              <div className="bg-slate-950 border-2 border-amber-400 rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl">
-                <h3 className="text-base font-black text-slate-100 uppercase tracking-wider">Consulta al Presentador</h3>
-                <p className="text-slate-400 text-xs mt-1 mb-3">El concursante puede pedir un consejo directo al anfitrión.</p>
-                {currentQuestion?.hint && (
-                  <div className="bg-blue-950/70 border border-slate-700 p-2.5 rounded-lg text-xs text-slate-200 italic mb-4">
-                    Pista: &ldquo;{currentQuestion.hint}&rdquo;
-                  </div>
-                )}
-                <div className="text-3xl font-mono font-bold text-amber-400 mb-5">
+              <div className="bg-slate-950 border-2 border-slate-600 rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl">
+                <h3 className="text-base font-black text-slate-100 uppercase tracking-wider">Comodín de la Llamada 2</h3>
+                <p className="text-slate-400 text-xs mt-1 mb-4">Llamad a un segundo compañero del grupo por teléfono o altavoz.</p>
+                <div className="text-4xl font-mono font-bold text-amber-400 mb-6">
                   00:{lifelineCountdown.toString().padStart(2, "0")}
                 </div>
                 <button
                   onClick={closeLifelineModal}
-                  className="w-full py-2.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black uppercase tracking-wider"
+                  className="w-full py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs font-bold uppercase tracking-wider"
                 >
-                  Listo • Volver a Responder
+                  Finalizar Llamada 2
                 </button>
               </div>
             </div>
